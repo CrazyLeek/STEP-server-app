@@ -55,10 +55,12 @@ def get_journey_files():
 
     for journey_file in os.listdir(JOURNEYS_FOLDER):
 
-        with open(JOURNEYS_FOLDER + journey_file) as file:
-            journey = json.load(file)
+        if journey_file[-5:] == ".json":
 
-        res.append(journey)
+            with open(JOURNEYS_FOLDER + journey_file) as file:
+                journey = json.load(file)
+
+            res.append(journey)
 
     return res
 
