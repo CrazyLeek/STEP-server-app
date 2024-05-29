@@ -3,7 +3,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Play Store</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GPS Recorder</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,13 +12,22 @@
             flex-direction: column;
             align-items: center;
             background-color: aliceblue;
+            width: 95%;
+            margin: 0 auto;
+            
+        }
+        @media (min-width: 800px) {
+            body {
+                width: 50%;
+            }
         }
         .app {
             align-items: center;
-            width: 50%;
+            width: 100%;
             border: 1px solid #ddd;
-            margin: 10px;
-            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            /*padding-: 10px;*/
             display: flex;
             flex-direction: row;
         }
@@ -58,7 +68,7 @@
             
             display: flex;
             flex-direction: row;
-            width: 40%;
+            width: 100%;
             
             margin: 5px;
             padding: 5px;
@@ -100,13 +110,14 @@
             display: flex;
             flex-direction: column;
             flex-grow: 0.5;
+            width: 10%;
             justify-content: center;
             align-items: center;
         }
 
         .review-downloads-age .age img {
             margin: 0;
-            width: 10%;
+            width: 15%;
             align-content: center;
         }
 
@@ -119,10 +130,11 @@
 
         .download-button {
             display: flex;
-            width: 45%;
+            width: 100%;
             background-color: blue;
             border-radius: 15px;
-            padding: 20px;
+            padding-top: 20px;
+            padding-bottom: 20px;
             justify-content: center;
             align-items: center;
             text-decoration: none;
@@ -140,7 +152,7 @@
             display: flex;
             flex-direction: row;
             margin-top: 20px;
-            width: 50%;
+            width: 100%;
             overflow: auto;
         }
 
@@ -151,14 +163,14 @@
         }
 
         .about-app{
-            width:50%;
+            width:100%;
             display: flex;
             flex-direction: column;
             flex-wrap: wrap;
         }
 
         .review-section {
-            width: 50%;
+            width: 100%;
 
         }
 
@@ -204,7 +216,7 @@
     </div>
 
     <a href="/static/app-release.apk" class="download-button">
-        <p>Download (Android)</p>
+        <p>Download (Android only)</p>
     </a>
     
 
