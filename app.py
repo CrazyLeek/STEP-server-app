@@ -74,10 +74,10 @@ def receive_journey_data():
     if len(os.listdir(JOURNEYS_FOLDER)) < MAX_JOURNEY_FILES:
 
         store_file(request.get_json())
-        return "Data successfully stored on the server"
+        return "Data successfully stored on the server", 201
     
     else:
-         return "Too many files on the server"
+         return "Too many files on the server", 507
     
 @app.get("/api/journey_data")
 def send_journey_data():
@@ -85,11 +85,33 @@ def send_journey_data():
     data = request.get_json()
     res = []
 
-    if "password" in data and data["password"] == ADMIN_PASSWORD:
-        res = get_journey_files()
+    if not ("password" in data and data["password"] == ADMIN_PASSWORD):
+        return "Unauthorized", 401
+    
 
+    res = get_journey_files()
 
     return res
+
+@app.delete("/api/journey_data")
+def delete_journey_data():
+    """Delete all the journeys stored in the folder"""
+
+    data = request.get_json()
+
+    if not ("password" in data and data["password"] == ADMIN_PASSWORD):
+        return "Unauthorized", 401
+    
+
+    for filename in os.listdir(JOURNEYS_FOLDER):
+
+        if filename[-5:] == ".json":
+            os.remove(JOURNEYS_FOLDER + filename)
+
+    return "Files were successfully deleted"
+    
+        
+
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
