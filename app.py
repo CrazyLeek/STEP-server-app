@@ -187,8 +187,6 @@ def receive_login():
         data = request.json
         username = data.get('username')
         password = data.get('password')
-        print(username)
-        print(password)
         user = get_user_by_username(username)
         if user and verify_user(username, password):
             user_id = str(user[0][0])

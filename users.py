@@ -68,10 +68,7 @@ def verify_user(username, password):
     - bool: True if credentials are valid, otherwise False.
     """
     user = get_user_by_username(username)
-    print(user[0][4])
-    print(password)
     if user and user[0][4] == password:
-        print("OUIIII")
         return True
     return False
 
