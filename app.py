@@ -1,6 +1,8 @@
 import os, json, datetime
 
-from flask import Flask, request, render_template
+from users import *
+from flask import Flask, request, render_template, jsonify
+from flask_cors import CORS
 
 # The maximum number of journey files the server will store
 MAX_JOURNEY_FILES = 1000
@@ -13,6 +15,8 @@ ADMIN_PASSWORD = "Zélie est une vilaine fille"
 
 app = Flask(__name__)
 
+# Allow CORS
+CORS(app)
 
 def journey_list_to_str(journey:list):
     """Convert a journey to a string"""
@@ -109,9 +113,112 @@ def delete_journey_data():
             os.remove(JOURNEYS_FOLDER + filename)
 
     return "Files were successfully deleted"
-    
-        
 
+
+@app.get('/api/user/<user_id>')
+def send_user(user_id):
+    """
+    API route used to get a user.
+    Method:
+    - GET
+    Possible returns:
+    - 200 (OK): Login successful, returns user.
+    - 404 (Not Found): Indicates that the requested user was not found.
+    - 500 (Internal Server Error): Error fetching user for unknown reason.
+    """
+    try:
+        user = get_user(user_id)
+        if user:
+            return jsonify({"user": user}), 200
+        else:
+            return jsonify({"error": "User not found"}), 404
+    except Exception as e:
+        app.logger.error(f"Error fetching user: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+
+@app.post("/api/user")
+def receive_user():
+    """
+    API route used to register a new user.
+    Method:
+    - POST
+    Expected JSON request:
+        {
+            "username": "User name",
+            "password": "Password"
+        }
+    Possible returns:
+    - 201 (Created): The user has been created successfully.
+    - 400 (Bad Request): The user name already exists in the database.
+    - 500 (Internal Server Error): User creation failed for an unknown reason.
+    """
+    try:
+        data = request.json
+        username = data.get('username')
+        existing_user = get_user_by_username(username)
+        if existing_user:
+            return jsonify({"error": "Username already exists"}), 400
+        user = create_user(data)
+        if user:
+            return jsonify({"message": "User created successfully", "userId": str(user[0][0])}), 201
+        else:
+            return jsonify({"error": "Failed to create user"}), 500
+    except Exception as e:
+        app.logger.error(f"Error creating user: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+
+@app.post("/api/login")
+def receive_login():
+    """
+    API route used to connect a user.
+    Method:
+    - POST
+    Expected JSON request:
+        {
+            "username": "User name",
+            "password": "Password"
+        }
+    Possible returns:
+    - 200 (OK): Login successful, returns user ID.
+    - 401 (Unauthorized): Invalid credentials.
+    - 500 (Internal Server Error): Connection attempt error for unknown reason.
+    """
+    try:
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
+        print(username)
+        print(password)
+        user = get_user_by_username(username)
+        if user and verify_user(username, password):
+            user_id = str(user[0][0])
+            return jsonify({'userId': user_id}), 200
+        else:
+            return jsonify({"error": "Invalid credentials"}), 401
+    except Exception as e:
+        app.logger.error(f"Error logging in: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+    
+@app.delete('/api/user/<user_id>')
+def delete_user(user_id):
+    """
+    API route for deleting a specific user and all associated data.
+    Method:
+    - DELETE
+    URL parameters:
+    - user_id: ID of the user to be deleted
+    Possible returns:
+    - 200 (OK): User deleted successfully.
+    - 500 (Internal Server Error): Error when deleting the user or their data for an unknown reason.
+    """
+    try:
+        if delete_user_by_id(user_id):
+            return jsonify({"message": "User and associated data deleted successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to delete user and associated data"}), 500
+    except Exception as e:
+        app.logger.error(f"Error deleting user and associated data: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
