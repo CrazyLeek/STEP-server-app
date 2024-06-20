@@ -1,6 +1,7 @@
 import os, json, datetime
 
 from users import *
+from journeys import *
 from flask import Flask, request, render_template, jsonify
 from flask_cors import CORS
 
@@ -217,12 +218,202 @@ def delete_user(user_id):
     except Exception as e:
         app.logger.error(f"Error deleting user and associated data: {str(e)}")
         return jsonify({"error": "An error occurred"}), 500
+    
+@app.get("/api/journey/user/<user_id>")
+def send_journeys(user_id):
+    """
+    API route used to get all journeys for a specific user.
+    Method:
+    - GET
+    URL parameters:
+    - user_id: ID of the user whose journeys are to be fetched.
+    Possible returns:
+    - 200 (OK): Journeys retrieved successfully.
+    - 404 (Not Found): No journeys found for the given user ID.
+    - 500 (Internal Server Error): Error retrieving journeys.
+    """
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        journeys = cur.execute("SELECT * FROM Journeys WHERE userId=?", (user_id,)).fetchall()
+        con.close()
+
+        if journeys:
+            # Convert each journey's methodsJson field from string to a list of methods
+            journeys_list = [{
+                "journeyId": journey[0],
+                "userId": journey[1],
+                "name": journey[2],
+                "methodsJson": journey[3]
+            } for journey in journeys]
+
+            return jsonify({"journeys": journeys_list}), 200
+        else:
+            return jsonify({"error": "No journeys found for the given user ID"}), 404
+    except Exception as e:
+        app.logger.error(f"Error fetching journeys for user: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+
+@app.post("/api/journey")
+def receive_journey():
+    """
+    API route used to receive and store a new journey.
+    Method:
+    - POST
+    Expected JSON request:
+        {
+            "userId": 1,
+            "name": "Journey name",
+            "methodsJson": NEED TO CONFIRM THE STRUCTURE
+        }
+    Possible returns:
+    - 201 (Created): Journey created successfully.
+    - 400 (Bad Request): Invalid input data.
+    - 500 (Internal Server Error): Error creating journey.
+    """
+    try:
+        data = request.json
+        user_id = data.get('userId')
+        name = data.get('name')
+        methods_json = data.get('methodsJson')
+
+        if not user_id or not name or not methods_json:
+            return jsonify({"error": "Invalid input data"}), 400
+
+        con = database.connect_to_db()
+        cur = con.cursor()
+        cur.execute("INSERT INTO Journeys (userId, name, methodsJson) VALUES (?, ?, ?)",
+                    (user_id, name, methods_json))
+        con.commit()
+        journey_id = cur.lastrowid
+        con.close()
+
+        return jsonify({"message": "Journey created successfully", "journey": {"journeyId": journey_id, "userId": user_id, "name": name, "methodsJson": methods_json}}), 201
+    except Exception as e:
+        app.logger.error(f"Error creating journey: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+
+
+@app.get("/api/specification/method/<method_id>")
+def send_specifications_method(method_id):
+    """
+    API route used to get specifications for a specific method.
+    Method:
+    - GET
+    URL parameters:
+    - method_id: ID of the method whose specifications are to be fetched.
+    Possible returns:
+    - 200 (OK): Specifications retrieved successfully.
+    - 404 (Not Found): No specifications found for the given method ID.
+    - 500 (Internal Server Error): Error retrieving specifications.
+    """
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        specifications = cur.execute("SELECT * FROM MethodsSpecifications WHERE methodId=?", (method_id,)).fetchall()
+        con.close()
+
+        if specifications:
+            return jsonify({"specifications": [{"specificationId": spec[0], "methodId": spec[1], "name": spec[2]} for spec in specifications]}), 200
+        else:
+            return jsonify({"error": "No specifications found for the given method ID"}), 404
+    except Exception as e:
+        app.logger.error(f"Error fetching specifications for method: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+
+@app.get("/api/method/<method_id>")
+def send_method(method_id):
+    """
+    API route used to get details of a specific method.
+    Method:
+    - GET
+    URL parameters:
+    - method_id: ID of the method to be fetched.
+    Possible returns:
+    - 200 (OK): Method details retrieved successfully.
+    - 404 (Not Found): No method found with the given ID.
+    - 500 (Internal Server Error): Error retrieving method details.
+    """
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        method = cur.execute("SELECT * FROM Methods WHERE methodId=?", (method_id,)).fetchone()
+        con.close()
+
+        if method:
+            return jsonify({"method": {"methodId": method[0], "name": method[1]}}), 200
+        else:
+            return jsonify({"error": "No method found with the given ID"}), 404
+    except Exception as e:
+        app.logger.error(f"Error fetching method details: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+
+@app.get("/api/journey/<journey_id>")
+def send_journey(journey_id):
+    """
+    API route used to get details of a specific journey.
+    Method:
+    - GET
+    URL parameters:
+    - journey_id: ID of the journey to be fetched.
+    Possible returns:
+    - 200 (OK): Journey details retrieved successfully.
+    - 404 (Not Found): No journey found with the given ID.
+    - 500 (Internal Server Error): Error retrieving journey details.
+    """
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        journey = cur.execute("SELECT * FROM Journeys WHERE journeyId=?", (journey_id,)).fetchone()
+        con.close()
+
+        if journey:
+            return jsonify({"journey": {"journeyId": journey[0], "userId": journey[1], "name": journey[2], "methods": json.loads(journey[3])}}), 200
+        else:
+            return jsonify({"error": "No journey found with the given ID"}), 404
+    except Exception as e:
+        app.logger.error(f"Error fetching journey details: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+
+@app.post("/api/record")
+def receive_record():
+    """
+    API route used to receive and store a new journey record.
+    Method:
+    - POST
+    Expected JSON request:
+        {
+            "journeyId": 1,
+            "isValidated": false,
+            "isPending": true
+        }
+    Possible returns:
+    - 201 (Created): Record created successfully.
+    - 500 (Internal Server Error): Error creating record.
+    """
+    try:
+        data = request.json
+        journey_id = data.get('journeyId')
+        is_validated = data.get('isValidated', False)
+        is_pending = data.get('isPending', True)
+
+        con = database.connect_to_db()
+        cur = con.cursor()
+        cur.execute("INSERT INTO Records (journeyId, isValidated, isPending) VALUES (?, ?, ?)",
+                    (journey_id, is_validated, is_pending))
+        con.commit()
+        record = cur.execute("SELECT * FROM Records WHERE recordId=?", (cur.lastrowid,)).fetchone()
+        con.close()
+
+        return jsonify({"message": "Record created successfully", "record": {"recordId": record[0], "journeyId": record[1], "isValidated": record[2], "isPending": record[3]}}), 201
+    except Exception as e:
+        app.logger.error(f"Error creating record: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
 
     return render_template("gps_record_app.html")
-
 
 """
 a = rq.get("http://localhost:5000/api/journey_data", json={"password":"Zélie est une vilaine fille"})
