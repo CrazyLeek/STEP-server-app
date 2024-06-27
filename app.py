@@ -19,6 +19,16 @@ app = Flask(__name__)
 # Allow CORS
 CORS(app)
 
+def journey_list_to_str_new(journey):
+    """Convert a journey to a string"""
+    res = []
+    for trip in journey:
+        if trip.get("methodSpecification"):
+            res.append(f"{trip['method']['name'].lower()}-{trip['methodSpecification']['name']}")
+        else:
+            res.append(trip['method']['name'].lower())
+    return '_'.join(res)
+
 def journey_list_to_str(journey:list):
     """Convert a journey to a string"""
 
@@ -43,6 +53,13 @@ def create_filename_from_journey(journey:list):
 
     return journey_str + "#" + date_str
 
+def create_filename_from_journey_new(journey):
+    """
+    Return a filename describing the journey 
+    """
+    journey_str = journey_list_to_str_new(journey)
+    date_str = datetime.datetime.now().strftime("%d_%m_%y_%H_%M_%S")
+    return f"{journey_str}#{date_str}"
 
 def store_file(journey_data):
     """Store a journey data in the hard drive"""
@@ -52,6 +69,12 @@ def store_file(journey_data):
     with open(f"journeys/{filename}.json", 'w') as file:
         json.dump(journey_data, file)
 
+def store_file_new(journey_data):
+    """Store a journey data in the hard drive"""
+    journey = journey_data["journey"]["methodsJourneys"]
+    filename = create_filename_from_journey_new(journey)
+    with open(f"{JOURNEYS_FOLDER}/{filename}.json", 'w') as file:
+        json.dump(journey_data, file)
 
 def get_journey_files():
     """Return the dictionnary of all journeys recorded on the server"""
@@ -73,6 +96,14 @@ def get_journey_files():
 def hello_world():
     return "<p>Hello, World!</p>"
 
+@app.post("/api/journey_data/new")
+def receive_journey_data_new():
+    if len(os.listdir(JOURNEYS_FOLDER)) < MAX_JOURNEY_FILES:
+        store_file_new(request.get_json())
+        return "Data successfully stored on the server", 201
+    else:
+        return "Too many files on the server", 507
+    
 @app.post("/api/journey_data")
 def receive_journey_data():
 
@@ -409,6 +440,40 @@ def receive_record():
     except Exception as e:
         app.logger.error(f"Error creating record: {str(e)}")
         return jsonify({"error": "An error occurred"}), 500
+    
+@app.get("/api/methods_with_specifications")
+def send_methods_with_specifications():
+    """
+    API route used to get all methods with their specifications.
+    Method:
+    - GET
+    Possible returns:
+    - 200 (OK): Methods and specifications retrieved successfully.
+    - 500 (Internal Server Error): Error retrieving methods and specifications.
+    """
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        methods = cur.execute("SELECT * FROM Methods").fetchall()
+        
+        methods_with_specifications = []
+        for method in methods:
+            method_id = method[0]
+            specifications = cur.execute("SELECT * FROM MethodsSpecifications WHERE methodId=?", (method_id,)).fetchall()
+            method_dict = {
+                "methodId": method[0],
+                "name": method[1],
+                "specifications": [{"specificationId": spec[0], "methodId": spec[1], "name": spec[2]} for spec in specifications]
+            }
+            methods_with_specifications.append(method_dict)
+        
+        con.close()
+
+        return jsonify({"methods": methods_with_specifications}), 200
+    except Exception as e:
+        app.logger.error(f"Error fetching methods and specifications: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
