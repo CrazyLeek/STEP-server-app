@@ -20,13 +20,11 @@ app = Flask(__name__)
 CORS(app)
 
 def journey_list_to_str_new(journey):
-    """Convert a journey to a string"""
     res = []
     for trip in journey:
-        if trip.get("methodSpecification"):
-            res.append(f"{trip['method']['name'].lower()}-{trip['methodSpecification']['name']}")
-        else:
-            res.append(trip['method']['name'].lower())
+        method = trip[0]
+        line = trip[1] if len(trip) > 1 and trip[1] else ''
+        res.append(f"{method}-{line}" if line else method)
     return '_'.join(res)
 
 def journey_list_to_str(journey:list):
@@ -99,7 +97,14 @@ def hello_world():
 @app.post("/api/journey_data/new")
 def receive_journey_data_new():
     if len(os.listdir(JOURNEYS_FOLDER)) < MAX_JOURNEY_FILES:
-        store_file_new(request.get_json())
+        journey_data = request.get_json()
+        journey = journey_data["journey"]
+        journey_str = journey_list_to_str_new(journey)
+        date_str = datetime.datetime.now().strftime("%d_%m_%y_%H_%M_%S")
+        filename = f"{journey_str}#{date_str}.json"
+
+        with open(f"{JOURNEYS_FOLDER}/{filename}", 'w') as file:
+            json.dump(journey_data, file)
         return "Data successfully stored on the server", 201
     else:
         return "Too many files on the server", 507
