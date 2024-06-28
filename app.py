@@ -182,6 +182,8 @@ def receive_user():
     Expected JSON request:
         {
             "username": "User name",
+            "firstName": "First name",
+            "lastName": "Last name",
             "password": "Password"
         }
     Possible returns:
@@ -192,10 +194,37 @@ def receive_user():
     try:
         data = request.json
         username = data.get('username')
+        first_name = data.get('firstName')
+        last_name = data.get('lastName')
+        password = data.get('password')
+        company_id = 1
+        points = 0
+        score = 0
+        last_month_score = 0
+        last_month_score_date = None
+        last_week_position = 0
+        last_week_position_date = None
+        reward_goal_id = None
+
         existing_user = get_user_by_username(username)
         if existing_user:
             return jsonify({"error": "Username already exists"}), 400
-        user = create_user(data)
+
+        user = create_user({
+            'username': username,
+            'firstName': first_name,
+            'lastName': last_name,
+            'password': password,
+            'companyId': company_id,
+            'points': points,
+            'score': score,
+            'lastMonthScore': last_month_score,
+            'lastMonthScoreDate': last_month_score_date,
+            'lastWeekPosition': last_week_position,
+            'lastWeekPositionDate': last_week_position_date,
+            'rewardGoalId': reward_goal_id
+        })
+
         if user:
             return jsonify({"message": "User created successfully", "userId": str(user[0][0])}), 201
         else:
