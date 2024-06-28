@@ -475,6 +475,35 @@ def send_methods_with_specifications():
         return jsonify({"error": "An error occurred"}), 500
 
 
+@app.delete('/api/journey/<journey_id>')
+def delete_journey(journey_id):
+    """
+    API route used to delete a specific journey.
+    Method:
+    - DELETE
+    URL parameters:
+    - journey_id: ID of the journey to be deleted.
+    Possible returns:
+    - 200 (OK): Journey deleted successfully.
+    - 404 (Not Found): No journey found with the given ID.
+    - 500 (Internal Server Error): Error deleting the journey.
+    """
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        result = cur.execute("DELETE FROM Journeys WHERE journeyId=?", (journey_id,))
+        con.commit()
+        con.close()
+
+        if result.rowcount == 0:
+            return jsonify({"error": "No journey found with the given ID"}), 404
+        else:
+            return jsonify({"message": "Journey deleted successfully"}), 200
+    except Exception as e:
+        app.logger.error(f"Error deleting journey: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+
+
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
 
