@@ -543,7 +543,7 @@ def gps_recorder_page():
     return render_template("gps_record_app.html")
 
 @app.route("/apps/step")
-def gps_recorder_page():
+def step_app_page():
 
     return render_template("step_app.html")
 
