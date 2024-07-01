@@ -6,7 +6,7 @@ def create_user(data):
     Creates a new user with a username and hashed password.
 
     Args:
-    - data (dict): Data for the user to be created, containing 'username' and 'password'.
+    - data (dict): Data for the user to be created.
 
     Returns:
     - user: The newly created user
@@ -14,9 +14,18 @@ def create_user(data):
     hashed_password = sha256(data['password'].encode('utf-8')).hexdigest()
     con = database.connect_to_db()
     cur = con.cursor()
-    cur.execute("INSERT INTO Users VALUES (?, ?, ?, 0, 0, NULL, NULL, NULL, NULL, NULL)",(data['username'], hashed_password, data['companyId'],))
+    cur.execute("""
+        INSERT INTO Users (
+            username, firstName, lastName, password, companyId, points, score,
+            lastMonthScore, lastMonthScoreDate, lastWeekPosition, lastWeekPositionDate, rewardGoalId
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data['username'], data['firstName'], data['lastName'], hashed_password, data['companyId'], 
+        data['points'], data['score'], data['lastMonthScore'], data['lastMonthScoreDate'],
+        data['lastWeekPosition'], data['lastWeekPositionDate'], data['rewardGoalId']
+    ))
     con.commit()
-    inserted_user = cur.execute("SELECT * FROM Users WHERE username=?",(data['username'],)).fetchall()
+    inserted_user = cur.execute("SELECT * FROM Users WHERE username=?", (data['username'],)).fetchall()
     con.close()
     return inserted_user
 

@@ -232,36 +232,6 @@ def receive_user():
     except Exception as e:
         app.logger.error(f"Error creating user: {str(e)}")
         return jsonify({"error": "An error occurred"}), 500
-
-@app.post("/api/login")
-def receive_login():
-    """
-    API route used to connect a user.
-    Method:
-    - POST
-    Expected JSON request:
-        {
-            "username": "User name",
-            "password": "Password"
-        }
-    Possible returns:
-    - 200 (OK): Login successful, returns user ID.
-    - 401 (Unauthorized): Invalid credentials.
-    - 500 (Internal Server Error): Connection attempt error for unknown reason.
-    """
-    try:
-        data = request.json
-        username = data.get('username')
-        password = data.get('password')
-        user = get_user_by_username(username)
-        if user and verify_user(username, password):
-            user_id = str(user[0][0])
-            return jsonify({'userId': user_id}), 200
-        else:
-            return jsonify({"error": "Invalid credentials"}), 401
-    except Exception as e:
-        app.logger.error(f"Error logging in: {str(e)}")
-        return jsonify({"error": "An error occurred"}), 500
     
 @app.delete('/api/user/<user_id>')
 def delete_user(user_id):
