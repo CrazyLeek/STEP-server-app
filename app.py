@@ -542,6 +542,11 @@ def gps_recorder_page():
 
     return render_template("gps_record_app.html")
 
+@app.route("/apps/step")
+def gps_recorder_page():
+
+    return render_template("step_app.html")
+
 """
 a = rq.get("http://localhost:5000/api/journey_data", json={"password":"Zélie est une vilaine fille"})
 aa = json.loads(a.text)

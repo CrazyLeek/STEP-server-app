@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>STEP App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: aliceblue;
+            width: 95%;
+            margin: 0 auto;
+            
+        }
+        @media (min-width: 800px) {
+            body {
+                width: 50%;
+            }
+        }
+        .app {
+            align-items: center;
+            width: 100%;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            /*padding-: 10px;*/
+            display: flex;
+            flex-direction: row;
+        }
+        .app img {
+            /*width: 100%;*/
+            flex-grow: 1;
+            width: 100px;
+            margin-right: 5%;
+        }
+        .app h2 {
+            font-size: 16px;
+        }
+        .app p {
+            color: #888;
+        }
+
+        .app-name-and-studio {
+            flex-direction: column;
+            flex-grow: 3;
+        }
+
+        .app-name-and-studio h1 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            
+        }
+        .app-name-and-studio .studio-name {
+            color: dodgerblue;
+            margin: 0;
+           
+        }
+
+        .app-name-and-studio .money-warning {
+            margin: 0;
+        }
+
+        .review-downloads-age {
+            
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            
+            margin: 5px;
+            padding: 5px;
+        }
+
+        .review-downloads-age .review {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .review-downloads-age .review .review-number {
+            color: #888;
+            font-size: 10px;
+        }
+        .review-downloads-age .downloads {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .review-downloads-age .downloads p {
+            margin: 0;
+        }
+        .review-downloads-age .downloads .download-text {
+            color: #888;
+            font-size: 10px;
+        }
+
+        .review-downloads-age .review p {
+            margin: 0;
+        }
+
+        .review-downloads-age .age {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 0.5;
+            width: 10%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .review-downloads-age .age img {
+            margin: 0;
+            width: 15%;
+            align-content: center;
+        }
+
+        .review-downloads-age .age p {
+            margin: 0;
+            color: #888;
+            font-size: 10px;
+        }
+
+
+        .download-button {
+            display: flex;
+            width: 100%;
+            background-color: blue;
+            border-radius: 15px;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .download-button p {
+            background-color: blue;
+            color: white;
+            font-size: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+        }
+
+        .screenshots {
+            display: flex;
+            flex-direction: row;
+            margin-top: 20px;
+            width: 100%;
+            overflow: auto;
+        }
+
+        .screenshots img {
+            width:200px;
+            margin-left: 10px;
+            border-radius: 10px;
+        }
+
+        .about-app{
+            width:100%;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+        }
+
+        .review-section {
+            width: 100%;
+
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app">
+
+        <div class="app-name-and-studio">
+
+            <h1>Step App</h1>
+            <p class="studio-name">RAIL</p>
+
+            <p class="money-warning">No ads • No in-app purchase</p>
+            
+
+        </div>
+    </div>
+
+    <div class="review-downloads-age">
+
+        <div class="review">
+
+            <p> 5,0 ★</p>
+            <p class="review-number"> 1 review </p>
+
+        </div>
+
+        <div class="downloads">
+            <p>More than 1</p>
+            <p class="download-text">download</p>
+        </div>
+
+        <div class="age">
+            <img 
+                src="{{ url_for('static', filename='apps/gps_recorder/PEGI_img.jpg') }}" 
+                alt="PEGI 3 logo"
+            >
+            <p>PEGI 3</p>
+        </div>
+
+    </div>
+
+    <a href="/static/step-app-release.apk" class="download-button">
+        <p>Download (Android only)</p>
+    </a>
+    
+
+    <div class="screenshots">
+
+        
+        
+    </div>
+
+    <div class="about-app">
+        <h2>About the app</h2>
+    </div>
+
+    <div class="review-section">
+        <h2>Reviews</h2>
+
+        <p>Such an amazing app ! I gave it 5 stars immediately !</p>
+
+    </div>
+</body>
+</html>
