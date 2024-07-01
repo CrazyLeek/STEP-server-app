@@ -11,7 +11,6 @@ def create_user(data):
     Returns:
     - user: The newly created user
     """
-    hashed_password = sha256(data['password'].encode('utf-8')).hexdigest()
     con = database.connect_to_db()
     cur = con.cursor()
     cur.execute("""
@@ -20,7 +19,7 @@ def create_user(data):
             lastMonthScore, lastMonthScoreDate, lastWeekPosition, lastWeekPositionDate, rewardGoalId
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        data['username'], data['firstName'], data['lastName'], hashed_password, data['companyId'], 
+        data['username'], data['firstName'], data['lastName'], data['password'], data['companyId'], 
         data['points'], data['score'], data['lastMonthScore'], data['lastMonthScoreDate'],
         data['lastWeekPosition'], data['lastWeekPositionDate'], data['rewardGoalId']
     ))
