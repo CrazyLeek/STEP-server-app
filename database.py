@@ -6,14 +6,14 @@ def connect_to_db():
 
     This module establishes a connection to an SQLite database using the 'sqlite3' interface.
 
-    Functions :
-    - connect_to_db(): Establishes a connection to the database
+    Functions:
+        - connect_to_db(): Establishes a connection to the database.
 
-    Dependencies :
-    - sqlite3: Python interface for sqlite.
+    Dependencies:
+        - sqlite3: Python interface for SQLite.
     """
     try:
         con = sqlite3.connect('../../db/step-db/stepdb.db')
         return con
     except sqlite3.Error as er:
-        raise Exception(f"Failed to connect to the database. Error code : {er.sqlite_errorcode} Error message : {er.sqlite_errorname}")
+        raise Exception(f"Failed to connect to the database. Error code: {er.sqlite_errorcode}, Error message: {er.sqlite_errorname}")
