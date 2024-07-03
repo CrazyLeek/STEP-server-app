@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, render_template, jsonify
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 from users import *
 from journeys import *
 from auth import *
@@ -281,6 +282,34 @@ def delete_journey(journey_id):
         - 500 (Internal Server Error): Error deleting the journey.
     """
     return remove_journey(journey_id)
+
+@app.post("/api/upload_journey_file")
+def upload_journey_file():
+    """
+    API route used to upload a journey file.
+    Method:
+        - POST
+    Expected multipart form-data request:
+        - file: The JSON file containing journey data.
+    Possible returns:
+        - 201 (Created): File successfully uploaded and stored.
+        - 507 (Insufficient Storage): Too many files on the server.
+    """
+    if 'file' not in request.files:
+        return "No file part", 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return "No selected file", 400
+
+    if len(os.listdir(JOURNEYS_FOLDER)) < MAX_JOURNEY_FILES:
+        filename = os.path.join(JOURNEYS_FOLDER, secure_filename(file.filename))
+        file.save(filename)
+        return "File successfully uploaded", 201
+    else:
+        return "Too many files on the server", 507
+
+
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
