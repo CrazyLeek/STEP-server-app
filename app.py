@@ -248,7 +248,10 @@ def receive_record():
         {
             "journeyId": 1,
             "isValidated": false,
-            "isPending": true
+            "isPending": true,
+            "jsonFileName": "example.json",
+            "points": 0,
+            "co2Saved": 0
         }
     Possible returns:
         - 201 (Created): Record created successfully.
@@ -293,6 +296,7 @@ def upload_journey_file():
         - file: The JSON file containing journey data.
     Possible returns:
         - 201 (Created): File successfully uploaded and stored.
+        - 400 (Bad Request): No file part or no selected file.
         - 507 (Insufficient Storage): Too many files on the server.
     """
     if 'file' not in request.files:
@@ -308,8 +312,6 @@ def upload_journey_file():
         return "File successfully uploaded", 201
     else:
         return "Too many files on the server", 507
-
-
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():

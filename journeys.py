@@ -296,10 +296,29 @@ def store_record(data):
     journey_id = data.get('journeyId')
     is_validated = data.get('isValidated', False)
     is_pending = data.get('isPending', True)
+    json_file_name = data.get('jsonFileName')
+    points = data.get('points', 0)
+    co2_saved = data.get('co2Saved', 0)
+
     con = database.connect_to_db()
     cur = con.cursor()
-    cur.execute("INSERT INTO Records (journeyId, isValidated, isPending) VALUES (?, ?, ?)", (journey_id, is_validated, is_pending))
+    cur.execute("""
+        INSERT INTO Records (journeyId, isValidated, isPending, jsonFileName, points, co2Saved) 
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (journey_id, is_validated, is_pending, json_file_name, points, co2_saved))
     con.commit()
     record = cur.execute("SELECT * FROM Records WHERE recordId=?", (cur.lastrowid,)).fetchone()
     con.close()
-    return {"message": "Record created successfully", "record": {"recordId": record[0], "journeyId": record[1], "isValidated": record[2], "isPending": record[3]}}, 201
+
+    return {
+        "message": "Record created successfully",
+        "record": {
+            "recordId": record[0],
+            "journeyId": record[1],
+            "isValidated": record[2],
+            "isPending": record[3],
+            "jsonFileName": record[4],
+            "points": record[5],
+            "co2Saved": record[6]
+        }
+    }, 201
