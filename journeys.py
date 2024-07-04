@@ -299,13 +299,15 @@ def store_record(data):
     json_file_name = data.get('jsonFileName')
     points = data.get('points', 0)
     co2_saved = data.get('co2Saved', 0)
+    start_date = data.get('startDate')
+    end_date = data.get('endDate')
 
     con = database.connect_to_db()
     cur = con.cursor()
     cur.execute("""
-        INSERT INTO Records (journeyId, isValidated, isPending, jsonFileName, points, co2Saved) 
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (journey_id, is_validated, is_pending, json_file_name, points, co2_saved))
+        INSERT INTO Records (journeyId, isValidated, isPending, jsonFileName, points, co2Saved, startDate, endDate) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (journey_id, is_validated, is_pending, json_file_name, points, co2_saved, start_date, end_date))
     con.commit()
     record = cur.execute("SELECT * FROM Records WHERE recordId=?", (cur.lastrowid,)).fetchone()
     con.close()
@@ -319,6 +321,8 @@ def store_record(data):
             "isPending": record[3],
             "jsonFileName": record[4],
             "points": record[5],
-            "co2Saved": record[6]
+            "co2Saved": record[6],
+            "startDate": record[7],
+            "endDate": record[8]
         }
     }, 201

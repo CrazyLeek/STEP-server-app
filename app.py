@@ -251,7 +251,9 @@ def receive_record():
             "isPending": true,
             "jsonFileName": "example.json",
             "points": 0,
-            "co2Saved": 0
+            "co2Saved": 0,
+            "startDate": "2024-07-04T12:00:00Z",
+            "endDate": "2024-07-04T13:00:00Z"
         }
     Possible returns:
         - 201 (Created): Record created successfully.
