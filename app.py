@@ -350,25 +350,25 @@ def analyse_journey_file():
     file.save(filename)
 
     # Call the analysis algorithm
-    try:
-        app.logger.debug(filename)
-        result = analyse_journey(filename)
-        app.logger.debug(filename)
-    except Exception as e:
-        return f"Error during file analysis: {str(e)}", 500
+    #try:
+    app.logger.debug(filename)
+    result = analyse_journey(filename)
+    app.logger.debug(filename)
+    #except Exception as e:
+     #   return f"Error during file analysis: {str(e)}", 500
 
     # Delete the temporary file
     os.remove(filename)
 
     # Update the record based on the analysis result
-    try:
-        con = database.connect_to_db()
-        cur = con.cursor()
-        cur.execute("UPDATE Records SET isValidated=?, isPending=? WHERE recordId=?", (result, False, record_id))
-        con.commit()
-        con.close()
-    except Exception as e:
-        return f"Error updating record: {str(e)}", 500
+    #try:
+    con = database.connect_to_db()
+    cur = con.cursor()
+    cur.execute("UPDATE Records SET isValidated=?, isPending=? WHERE recordId=?", (result, False, record_id))
+    con.commit()
+    con.close()
+    #except Exception as e:
+    #    return f"Error updating record: {str(e)}", 500
 
     return "File successfully analyzed and record updated", 200
 
