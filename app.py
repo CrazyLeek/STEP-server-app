@@ -6,6 +6,13 @@ from users import *
 from journeys import *
 from auth import *
 
+import sys
+sys.path.insert(1, '/STEP_journey_checker')
+
+from STEP_journey_checker.journey_checker import analyse_journey
+
+
+
 # The maximum number of journey files the server will store
 MAX_JOURNEY_FILES = 1000
 
@@ -314,6 +321,55 @@ def upload_journey_file():
         return "File successfully uploaded", 201
     else:
         return "Too many files on the server", 507
+    
+@app.post("/api/analyse_journey_file")
+def analyse_journey_file():
+    """
+    API route used to analyze a journey file.
+    Method:
+        - POST
+    Expected multipart form-data request:
+        - file: The JSON file containing journey data.
+        - recordId: The ID of the journey record.
+        - username: The username of the user.
+    Possible returns:
+        - 200 (OK): File successfully analyzed.
+        - 400 (Bad Request): No file part or no selected file.
+        - 500 (Internal Server Error): Error during file analysis.
+    """
+    if 'file' not in request.files or 'recordId' not in request.form or 'username' not in request.form:
+        return "No file part or recordId or username", 400
+
+    file = request.files['file']
+    record_id = request.form['recordId']
+    username = request.form['username']
+
+    if file.filename == '':
+        return "No selected file", 400
+
+    filename = os.path.join(JOURNEYS_FOLDER, secure_filename(f"{file.filename}-{username}"))
+    file.save(filename)
+
+    # Call the analysis algorithm
+    try:
+        result = analyse_journey(filename)
+    except Exception as e:
+        return f"Error during file analysis: {str(e)}", 500
+
+    # Delete the temporary file
+    os.remove(filename)
+
+    # Update the record based on the analysis result
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        cur.execute("UPDATE Records SET isValidated=?, isPending=? WHERE recordId=?", (result, False, record_id))
+        con.commit()
+        con.close()
+    except Exception as e:
+        return f"Error updating record: {str(e)}", 500
+
+    return "File successfully analyzed and record updated", 200
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
