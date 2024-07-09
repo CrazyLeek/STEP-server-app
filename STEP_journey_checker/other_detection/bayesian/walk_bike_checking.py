@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 
 
-sys.path.append("../..")
+sys.path.append("/../..")
 import useful_things as my_util  # type: ignore
 import multi_modal               # type: ignore
 
