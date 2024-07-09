@@ -337,7 +337,7 @@ def analyse_journey_file():
         - 400 (Bad Request): No file part or no selected file.
         - 500 (Internal Server Error): Error during file analysis.
     """
-    if 'file' not in request.files or 'recordId' not in request.form or 'username' not in request.form:
+    if 'file' not in request.files or 'recordId' not in request.form :
         return "No file part or recordId or username", 400
 
     file = request.files['file']
