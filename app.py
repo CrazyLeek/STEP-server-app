@@ -7,7 +7,7 @@ from journeys import *
 from auth import *
 
 import sys
-sys.path.insert(1, '/STEP_journey_checker')
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'STEP_journey_checker')))
 
 from STEP_journey_checker.journey_checker import analyse_journey
 
