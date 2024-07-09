@@ -14,7 +14,7 @@ more work especially to ensure reproductible results with tests.
 a car since we don't need to check that. For now, the bayesian method has 
 given the best results so we'll use it. 
 """
-import multi_modal
+import multi_modal as multi_modal
 import useful_things as my_util
 import other_detection.bayesian.walk_bike_checking as bayes
 
