@@ -342,17 +342,18 @@ def analyse_journey_file():
 
     file = request.files['file']
     record_id = request.form['recordId']
-    username = request.form['username']
 
     if file.filename == '':
         return "No selected file", 400
 
-    filename = os.path.join(JOURNEYS_FOLDER, secure_filename(f"{file.filename}-{username}"))
+    filename = os.path.join(JOURNEYS_FOLDER, secure_filename(f"{file.filename}"))
     file.save(filename)
 
     # Call the analysis algorithm
     try:
+        app.logger.debug(filename)
         result = analyse_journey(filename)
+        app.logger.debug(filename)
     except Exception as e:
         return f"Error during file analysis: {str(e)}", 500
 
