@@ -337,7 +337,7 @@ def analyse_journey_file():
         - 400 (Bad Request): No file part or no selected file.
         - 500 (Internal Server Error): Error during file analysis.
     """
-    if 'file' not in request.files or 'recordId' not in request.form :
+    if 'file' not in request.files or 'recordId' not in request.form:
         return "No file part or recordId or username", 400
 
     file = request.files['file']
@@ -349,26 +349,33 @@ def analyse_journey_file():
     filename = os.path.join(JOURNEYS_FOLDER, secure_filename(f"{file.filename}"))
     file.save(filename)
 
-    # Call the analysis algorithm
-    #try:
-    app.logger.debug(filename)
-    result = analyse_journey(filename)
-    app.logger.debug(filename)
-    #except Exception as e:
-     #   return f"Error during file analysis: {str(e)}", 500
+    result = False
 
-    # Delete the temporary file
-    os.remove(filename)
-
-    # Update the record based on the analysis result
-    #try:
-    con = database.connect_to_db()
-    cur = con.cursor()
-    cur.execute("UPDATE Records SET isValidated=?, isPending=? WHERE recordId=?", (result, False, record_id))
-    con.commit()
-    con.close()
-    #except Exception as e:
-    #    return f"Error updating record: {str(e)}", 500
+    try:
+        app.logger.debug(filename)
+        result = analyse_journey(filename)
+        app.logger.debug(filename)
+    except Exception as e:
+        app.logger.error(f"Error during file analysis: {str(e)}")
+        try:
+            con = database.connect_to_db()
+            cur = con.cursor()
+            cur.execute("UPDATE Records SET isValidated=?, isPending=? WHERE recordId=?", (False, False, record_id))
+            con.commit()
+            con.close()
+        except Exception as e:
+            return f"Error updating record after analysis failure: {str(e)}", 500
+        return "Error during file analysis, record updated with analysis failure", 500
+    finally:
+        os.remove(filename)
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        cur.execute("UPDATE Records SET isValidated=?, isPending=? WHERE recordId=?", (result, False, record_id))
+        con.commit()
+        con.close()
+    except Exception as e:
+        return f"Error updating record: {str(e)}", 500
 
     return "File successfully analyzed and record updated", 200
 
