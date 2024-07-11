@@ -402,6 +402,18 @@ def analyse_journey_file():
 
     return "File successfully analyzed and record updated", 200
 
+@app.route('/api/weekly-roundup', methods=['GET'])
+def get_weekly_roundup():
+    data = {
+        'routesCompleted': 0,
+        'co2Reduced': 0,
+        'pointsEarned': 0,
+        'moneySaved': 0,
+        'leaderboardPosition': 0,
+        'placesGained': 0,
+    }
+    return jsonify(data)
+
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
     return render_template("gps_record_app.html")
