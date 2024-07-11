@@ -27,6 +27,8 @@ app = Flask(__name__)
 # Allow CORS
 CORS(app)
 
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
+
 @app.route("/")
 def hello_world():
     return "<p>Hello, World!</p>"
