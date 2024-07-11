@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, send_file
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from users import *
@@ -138,19 +138,40 @@ def receive_user():
     API route used to register a new user.
     Method:
         - POST
-    Expected JSON request:
+    Expected form-data request:
         {
             "username": "User name",
             "firstName": "First name",
             "lastName": "Last name",
-            "password": "Password"
+            "password": "Password",
+            "profileImage": "Profile image file (optional)"
         }
     Possible returns:
         - 201 (Created): The user has been created successfully.
         - 400 (Bad Request): The user name already exists in the database.
         - 500 (Internal Server Error): User creation failed for an unknown reason.
     """
-    return register_user(request.json)
+    return register_user(request.form, request.files)
+
+@app.get("/api/user_profile_image/<user_id>")
+def get_user_profile_image(user_id):
+    """
+    API route to get the profile image of a user.
+    Method:
+        - GET
+    URL parameters:
+        - user_id: ID of the user whose profile image is to be fetched.
+    Possible returns:
+        - 200 (OK): Profile image retrieved successfully.
+        - 404 (Not Found): Profile image not found.
+    """
+    user_pictures_folder = 'user_pictures'
+    filename = os.path.join(user_pictures_folder, f"{user_id}.png")
+    
+    if os.path.exists(filename):
+        return send_file(filename, mimetype='image/png')
+    else:
+        return {"error": "Profile image not found"}, 404
 
 @app.delete('/api/user/<user_id>')
 def delete_user(user_id):

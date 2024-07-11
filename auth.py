@@ -1,4 +1,6 @@
 from users import *
+import os
+from werkzeug.utils import secure_filename
 
 def login_user(data):
     """
@@ -35,12 +37,13 @@ def get_user_details(user_id):
     else:
         return {"error": "User not found"}, 404
 
-def register_user(data):
+def register_user(data, files):
     """
     Register a new user.
 
     Args:
         data (dict): Data for the new user.
+        files (FileStorage): Files for the new user.
 
     Returns:
         tuple: Response message and status code.
@@ -78,9 +81,27 @@ def register_user(data):
     })
 
     if user:
-        return {"message": "User created successfully", "userId": str(user[0][0])}, 201
+        user_id = user[0][0]
+        if 'profileImage' in files:
+            save_profile_image(files['profileImage'], user_id)
+        return {"message": "User created successfully", "userId": str(user_id)}, 201
     else:
         return {"error": "Failed to create user"}, 500
+    
+def save_profile_image(profile_image, user_id):
+    """
+    Save the profile image for a user.
+
+    Args:
+        profile_image (FileStorage): The profile image file.
+        user_id (int): The ID of the user.
+    """
+    user_pictures_folder = 'user_pictures'
+    if not os.path.exists(user_pictures_folder):
+        os.makedirs(user_pictures_folder)
+    
+    filename = secure_filename(f"{user_id}.png")
+    profile_image.save(os.path.join(user_pictures_folder, filename))
 
 def remove_user(user_id):
     """
