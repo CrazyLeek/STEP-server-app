@@ -414,6 +414,30 @@ def get_weekly_roundup():
     }
     return jsonify(data)
 
+@app.route('/api/user-records/<int:user_id>', methods=['GET'])
+def get_user_records(user_id):
+    conn = database.connect_to_db()
+    records = conn.execute('''
+        SELECT r.*, j.name as journey_name
+        FROM Records r
+        LEFT JOIN Journeys j ON r.journeyId = j.journeyId
+        WHERE r.userId = ?
+        ORDER BY r.startDate DESC
+    ''', (user_id,)).fetchall()
+    conn.close()
+    
+    records_list = []
+    for record in records:
+        record_dict = dict(record)
+        if record_dict['journey_name']:
+            record_dict['journey'] = {'name': record_dict['journey_name']}
+        else:
+            record_dict['journey'] = None
+        del record_dict['journey_name']
+        records_list.append(record_dict)
+
+    return jsonify(records_list)
+
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
     return render_template("gps_record_app.html")
