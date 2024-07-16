@@ -422,7 +422,7 @@ def get_user_records(user_id):
         SELECT r.*, j.name as journey_name
         FROM Records r
         LEFT JOIN Journeys j ON r.journeyId = j.journeyId
-        WHERE r.journeyId IN (SELECT journeyId FROM UserJourneys WHERE userId = ?)
+        WHERE j.userId = ?
         ORDER BY r.startDate DESC
     ''', (user_id,)).fetchall()
     cur.close()
