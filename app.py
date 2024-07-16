@@ -429,24 +429,26 @@ def get_user_records(user_id):
         ORDER BY r.startDate DESC
     '''
     
-    try:
-        records = cur.execute(query, (user_id,)).fetchall()
-        records_list = []
-        
-        for record in records:
-            record_dict = dict(record)
-            record_dict['journey'] = {'name': record_dict['journey_name']} if record_dict.get('journey_name') else None
-            del record_dict['journey_name']
-            records_list.append(record_dict)
-        
-        return jsonify(records_list)
+    #try:
+    records = cur.execute(query, (user_id,)).fetchall()
+    records_list = []
     
-    except sqlite3.Error as e:
-        return jsonify({'error': str(e)}), 500
+    for record in records:
+        record_dict = dict(record)
+        record_dict['journey'] = {'name': record_dict['journey_name']} if record_dict.get('journey_name') else None
+        del record_dict['journey_name']
+        records_list.append(record_dict)
     
-    finally:
-        cur.close()
-        con.close()
+    cur.close()
+    con.close()
+
+    return jsonify(records_list)
+
+    #except sqlite3.Error as e:
+    #    return jsonify({'error': str(e)}), 500
+    
+    #finally:
+
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
