@@ -418,25 +418,35 @@ def get_weekly_roundup():
 @app.route('/api/user-records/<int:user_id>', methods=['GET'])
 def get_user_records(user_id):
     con = database.connect_to_db()
-    con.row_factory = sqlite3.Row 
+    con.row_factory = sqlite3.Row
     cur = con.cursor()
-    records = cur.execute('''
+    
+    query = '''
         SELECT r.*, j.name as journey_name
         FROM Records r
         LEFT JOIN Journeys j ON r.journeyId = j.journeyId
-        WHERE r.userId = ? 
+        WHERE r.userId = ?
         ORDER BY r.startDate DESC
-    ''', (user_id,)).fetchall()
-    cur.close()
+    '''
     
-    records_list = []
-    for record in records:
-        record_dict = dict(record)
-        record_dict['journey'] = {'name': record_dict['journey_name']} if record_dict.get('journey_name') else None
-        del record_dict['journey_name']
-        records_list.append(record_dict)
-
-    return jsonify(records_list)
+    try:
+        records = cur.execute(query, (user_id,)).fetchall()
+        records_list = []
+        
+        for record in records:
+            record_dict = dict(record)
+            record_dict['journey'] = {'name': record_dict['journey_name']} if record_dict.get('journey_name') else None
+            del record_dict['journey_name']
+            records_list.append(record_dict)
+        
+        return jsonify(records_list)
+    
+    except sqlite3.Error as e:
+        return jsonify({'error': str(e)}), 500
+    
+    finally:
+        cur.close()
+        con.close()
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
