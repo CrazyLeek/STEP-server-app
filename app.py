@@ -416,15 +416,16 @@ def get_weekly_roundup():
 
 @app.route('/api/user-records/<int:user_id>', methods=['GET'])
 def get_user_records(user_id):
-    conn = database.connect_to_db()
-    records = conn.execute('''
+    con = database.connect_to_db()
+    cur = con.cursor()
+    records = cur.execute('''
         SELECT r.*, j.name as journey_name
         FROM Records r
         LEFT JOIN Journeys j ON r.journeyId = j.journeyId
-        WHERE r.userId = ?
+        WHERE r.journeyId IN (SELECT journeyId FROM UserJourneys WHERE userId = ?)
         ORDER BY r.startDate DESC
     ''', (user_id,)).fetchall()
-    conn.close()
+    cur.close()
     
     records_list = []
     for record in records:
