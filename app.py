@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from users import *
 from journeys import *
 from auth import *
+import sqlite3
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'STEP_journey_checker')))
@@ -417,19 +418,20 @@ def get_weekly_roundup():
 @app.route('/api/user-records/<int:user_id>', methods=['GET'])
 def get_user_records(user_id):
     con = database.connect_to_db()
+    con.row_factory = sqlite3.Row 
     cur = con.cursor()
     records = cur.execute('''
         SELECT r.*, j.name as journey_name
         FROM Records r
         LEFT JOIN Journeys j ON r.journeyId = j.journeyId
-        WHERE j.userId = ?
+        WHERE r.userId = ? 
         ORDER BY r.startDate DESC
     ''', (user_id,)).fetchall()
     cur.close()
     
     records_list = []
     for record in records:
-        record_dict = {key: record[key] for key in record.keys()}
+        record_dict = dict(record)
         record_dict['journey'] = {'name': record_dict['journey_name']} if record_dict.get('journey_name') else None
         del record_dict['journey_name']
         records_list.append(record_dict)
