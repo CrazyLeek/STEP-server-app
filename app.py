@@ -416,7 +416,7 @@ def get_weekly_roundup():
 
 @app.route('/api/user-records/<int:user_id>', methods=['GET'])
 def get_user_records(user_id):
-    con = database.connect_to_db()
+    con = get_db_connection()
     cur = con.cursor()
     records = cur.execute('''
         SELECT r.*, j.name as journey_name
@@ -430,10 +430,7 @@ def get_user_records(user_id):
     records_list = []
     for record in records:
         record_dict = dict(record)
-        if record_dict['journey_name']:
-            record_dict['journey'] = {'name': record_dict['journey_name']}
-        else:
-            record_dict['journey'] = None
+        record_dict['journey'] = {'name': record_dict['journey_name']} if record_dict.get('journey_name') else None
         del record_dict['journey_name']
         records_list.append(record_dict)
 
