@@ -416,7 +416,7 @@ def get_weekly_roundup():
 
 @app.route('/api/user-records/<int:user_id>', methods=['GET'])
 def get_user_records(user_id):
-    con = get_db_connection()
+    con = database.connect_to_db()
     cur = con.cursor()
     records = cur.execute('''
         SELECT r.*, j.name as journey_name
