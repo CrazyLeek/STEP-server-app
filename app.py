@@ -429,7 +429,7 @@ def get_user_records(user_id):
     
     records_list = []
     for record in records:
-        record_dict = dict(record)
+        record_dict = {key: record[key] for key in record.keys()}
         record_dict['journey'] = {'name': record_dict['journey_name']} if record_dict.get('journey_name') else None
         del record_dict['journey_name']
         records_list.append(record_dict)
