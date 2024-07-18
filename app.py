@@ -370,17 +370,21 @@ def analyse_journey_file():
     if file.filename == '':
         return "No selected file", 400
 
+
+    #Sauvegarde du fichier temporairement
     filename = os.path.join(JOURNEYS_FOLDER, secure_filename(f"{file.filename}"))
     file.save(filename)
 
     result = False
 
+    #Analyse du fichier par l'algorithme
     try:
         app.logger.debug(filename)
-        result = analyse_journey(filename)
+        result, distance_by_modes = analyse_journey(filename)
         app.logger.debug(filename)
     except Exception as e:
         app.logger.error(f"Error during file analysis: {str(e)}")
+        #Si ça échoue en cours de route on set le record associé à refusé
         try:
             con = database.connect_to_db()
             cur = con.cursor()
@@ -391,8 +395,10 @@ def analyse_journey_file():
             return f"Error updating record after analysis failure: {str(e)}", 500
         return "Error during file analysis, record updated with analysis failure", 500
     finally:
+        #On retire systématiquement le fichier temporairement stocké du serveur
         os.remove(filename)
     try:
+        #Sinon si il n'y a pas eu d'erreur on va update le record avec le résultat
         con = database.connect_to_db()
         cur = con.cursor()
         cur.execute("UPDATE Records SET isValidated=?, isPending=? WHERE recordId=?", (result, False, record_id))

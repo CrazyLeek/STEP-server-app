@@ -53,6 +53,7 @@ def register_user(data, files):
     last_name = data.get('lastName')
     password = data.get('password')
     company_id = 1
+    company_position_id = 1
     points = 0
     score = 0
     last_month_score = 0
@@ -71,6 +72,7 @@ def register_user(data, files):
         'lastName': last_name,
         'password': password,
         'companyId': company_id,
+        'companyPositionId' : company_position_id,
         'points': points,
         'score': score,
         'lastMonthScore': last_month_score,

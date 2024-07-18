@@ -322,7 +322,9 @@ def store_record(data):
             "jsonFileName": record[4],
             "points": record[5],
             "co2Saved": record[6],
-            "startDate": record[7],
-            "endDate": record[8]
+            "nbMethodUsed": record[7],
+            "kmTravelled": record[8],
+            "startDate": record[9],
+            "endDate": record[10]
         }
     }, 201

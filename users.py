@@ -15,11 +15,11 @@ def create_user(data):
     cur = con.cursor()
     cur.execute("""
         INSERT INTO Users (
-            username, firstName, lastName, password, companyId, points, score,
+            username, firstName, lastName, password, companyId, companyPositionId, points, score,
             lastMonthScore, lastMonthScoreDate, lastWeekPosition, lastWeekPositionDate, rewardGoalId
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        data['username'], data['firstName'], data['lastName'], data['password'], data['companyId'], 
+        data['username'], data['firstName'], data['lastName'], data['password'], data['companyId'], data['companyPositionId'], 
         data['points'], data['score'], data['lastMonthScore'], data['lastMonthScoreDate'],
         data['lastWeekPosition'], data['lastWeekPositionDate'], data['rewardGoalId']
     ))
