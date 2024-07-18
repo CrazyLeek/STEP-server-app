@@ -6,6 +6,7 @@ from users import *
 from journeys import *
 from auth import *
 import sqlite3
+import traceback
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'STEP_journey_checker')))
@@ -384,6 +385,7 @@ def analyse_journey_file():
         app.logger.debug(filename)
     except Exception as e:
         app.logger.error(f"Error during file analysis: {str(e)}")
+        print(traceback.format_exc())
         #Si ça échoue en cours de route on set le record associé à refusé
         try:
             con = database.connect_to_db()
