@@ -382,7 +382,7 @@ def analyse_journey_file():
     #Analyse du fichier par l'algorithme
     try:
         result, distance_by_modes = analyse_journey(filename)
-
+        app.logger.error(distance_by_modes)
         """
         The section below will be useful the day you want to calculate CO2e differently depending on the specification (particularly for petrol, diesel, hybrid cars, etc.).
         It may be necessary to change the structure returned by distance_by_modes to take account of each specification.
