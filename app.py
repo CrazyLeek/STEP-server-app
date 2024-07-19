@@ -382,7 +382,6 @@ def analyse_journey_file():
     #Analyse du fichier par l'algorithme
     try:
         result, distance_by_modes = analyse_journey(filename)
-        app.logger.error(distance_by_modes)
         """
         The section below will be useful the day you want to calculate CO2e differently depending on the specification (particularly for petrol, diesel, hybrid cars, etc.).
         It may be necessary to change the structure returned by distance_by_modes to take account of each specification.
@@ -420,85 +419,72 @@ def analyse_journey_file():
         con.commit()
         con.close()
 
-        #if result == True:
-        """
-        This section allows you to retrieve a dictionary of CO2e emissions for each transport method and its specifications. It is structured as follows:
-            {
-                ‘walk’: {‘default’: 0.231},
-                ‘car‘: {’petrol": 0.634, “diesel”: 0.56, “Unknown”: 0.583},
-                . . . etc
-            } 
-        """
-        con = database.connect_to_db()
-        cursor = con.cursor()
+        if result == True:
+            """
+            This section allows you to retrieve a dictionary of CO2e emissions for each transport method and its specifications. It is structured as follows:
+                {
+                    ‘walk’: {‘default’: 0.231},
+                    ‘car‘: {’petrol": 0.634, “diesel”: 0.56, “Unknown”: 0.583},
+                    . . . etc
+                } 
+            """
+            con = database.connect_to_db()
+            cursor = con.cursor()
 
-        # Step 1: Get all carbon emission factors with method names
-        cursor.execute('''
-            SELECT cef.carbonEmissionFactorId, cef.methodId, cef.co2eFactor, m.name AS methodName
-            FROM CarbonEmissionFactors cef
-            JOIN Methods m ON cef.methodId = m.methodId;
-        ''')
-        factors = cursor.fetchall()
+            # Step 1: Get all carbon emission factors with method names
+            cursor.execute('''
+                SELECT cef.carbonEmissionFactorId, cef.methodId, cef.co2eFactor, m.name AS methodName
+                FROM CarbonEmissionFactors cef
+                JOIN Methods m ON cef.methodId = m.methodId;
+            ''')
+            factors = cursor.fetchall()
 
-        # Step 2: Count the number of factors per method
-        cursor.execute('''
-            SELECT methodId, COUNT(*) AS count
-            FROM CarbonEmissionFactors
-            GROUP BY methodId;
-        ''')
-        counts = cursor.fetchall()
-        method_count = {methodId: count for methodId, count in counts}
+            # Step 2: Count the number of factors per method
+            cursor.execute('''
+                SELECT methodId, COUNT(*) AS count
+                FROM CarbonEmissionFactors
+                GROUP BY methodId;
+            ''')
+            counts = cursor.fetchall()
+            method_count = {methodId: count for methodId, count in counts}
 
-        # Step 3: Get specifications for methods with multiple factors
-        cursor.execute('''
-            SELECT cef.carbonEmissionFactorId, cef.methodId, cef.co2eFactor, ms.name AS specificationName
-            FROM CarbonEmissionFactors cef
-            JOIN CarbonEmissionFactorSpecifications ceff ON cef.carbonEmissionFactorId = ceff.carbonEmissionFactorId
-            JOIN MethodsSpecifications ms ON ceff.specificationId = ms.specificationId
-            WHERE ceff.methodId = cef.methodId;
-        ''')
-        specifications = cursor.fetchall()
+            # Step 3: Get specifications for methods with multiple factors
+            cursor.execute('''
+                SELECT cef.carbonEmissionFactorId, cef.methodId, cef.co2eFactor, ms.name AS specificationName
+                FROM CarbonEmissionFactors cef
+                JOIN CarbonEmissionFactorSpecifications ceff ON cef.carbonEmissionFactorId = ceff.carbonEmissionFactorId
+                JOIN MethodsSpecifications ms ON ceff.specificationId = ms.specificationId
+                WHERE ceff.methodId = cef.methodId;
+            ''')
+            specifications = cursor.fetchall()
 
-        con.close()
+            con.close()
 
-        app.logger.error('specifications')
-        app.logger.error(specifications)
-        app.logger.error('method_count')
-        app.logger.error(method_count)
-        app.logger.error('factors')
-        app.logger.error(factors)
+            emission_dict = {}
 
-        emission_dict = {}
+            # Process each factor
+            for factorId, methodId, co2eFactor, methodName in factors:
+                methodNameLower = methodName.lower()
+                if method_count[methodId] == 1:
+                    emission_dict[methodNameLower] = {"default": co2eFactor}
+                else:
+                    if methodNameLower not in emission_dict:
+                        emission_dict[methodNameLower] = {}
 
-        # Process each factor
-        for factorId, methodId, co2eFactor, methodName in factors:
-            methodNameLower = methodName.lower()
-            if method_count[methodId] == 1:
-                emission_dict[methodNameLower] = {"default": co2eFactor}
-            else:
-                if methodNameLower not in emission_dict:
-                    emission_dict[methodNameLower] = {}
+            # Add specifications to methods with multiple factors
+            for factorId, methodId, co2eFactor, specName in specifications:
+                method_name = next((name for fid, mid, cf, name in factors if fid == factorId), None)
+                if method_name:
+                    methodNameLower = method_name.lower()
+                    emission_dict[methodNameLower][specName.lower()] = co2eFactor
 
-        # Add specifications to methods with multiple factors
-        for factorId, methodId, co2eFactor, specName in specifications:
-            method_name = next((name for fid, mid, cf, name in factors if fid == factorId), None)
-            if method_name:
-                methodNameLower = method_name.lower()
-                emission_dict[methodNameLower][specName.lower()] = co2eFactor
+            c02eSaved = calculate_co2e_emission(distance_by_modes, emission_dict, record_id)
 
-        app.logger.error('emission_dict')
-        app.logger.error(emission_dict)
-        app.logger.error('distance_by_modes')
-        app.logger.error(distance_by_modes)
-        c02eSaved = calculate_co2e_emission(distance_by_modes, emission_dict, record_id)
-        app.logger.error('c02eSaved')
-        app.logger.error(c02eSaved)
-
-        con = database.connect_to_db()
-        cur = con.cursor()
-        cur.execute("UPDATE Records SET co2Saved=? WHERE recordId=?", (c02eSaved, record_id))
-        con.commit()
-        con.close()
+            con = database.connect_to_db()
+            cur = con.cursor()
+            cur.execute("UPDATE Records SET co2Saved=? WHERE recordId=?", (c02eSaved, record_id))
+            con.commit()
+            con.close()
                     
     except Exception as e:
         return f"Error updating record: {str(e)}", 500
@@ -569,10 +555,6 @@ def calculate_co2e_emission(distance_by_modes, emission_dict, recordId):
     co2e_by_car = total_distance * emission_dict['car']['unknown']
     co2eSaved = co2e_by_car - total_co2e
 
-    app.logger.error('total_distance')
-    app.logger.error(total_distance)
-    app.logger.error('total_co2e')
-    app.logger.error(total_co2e)
     return co2eSaved
 
 @app.route('/api/weekly-roundup', methods=['GET'])
@@ -621,6 +603,41 @@ def get_user_records(user_id):
     
     #finally:
 
+@app.route('/api/carbon_emission_stats', methods=['GET'])
+def get_carbon_emission_stats():
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        cur.execute('''
+            SELECT 
+                date,
+                co2eWalk,
+                co2eDart,
+                co2eLuas,
+                co2eBike,
+                co2eCar,
+                co2eBus
+            FROM CarbonEmissionStats
+        ''')
+        rows = cur.fetchall()
+        con.close()
+
+        stats = [
+            {
+                "date": row[0],
+                "co2eWalk": row[1],
+                "co2eDart": row[2],
+                "co2eLuas": row[3],
+                "co2eBike": row[4],
+                "co2eCar": row[5],
+                "co2eBus": row[6],
+            }
+            for row in rows
+        ]
+
+        return jsonify(stats), 200
+    except Exception as e:
+        return str(e), 500
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
