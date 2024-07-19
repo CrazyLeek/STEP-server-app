@@ -6,6 +6,7 @@ from users import *
 from journeys import *
 from auth import *
 import sqlite3
+import datetime
 import traceback
 
 import sys
@@ -380,9 +381,21 @@ def analyse_journey_file():
 
     #Analyse du fichier par l'algorithme
     try:
-        app.logger.debug(filename)
         result, distance_by_modes = analyse_journey(filename)
-        app.logger.debug(filename)
+
+        """
+        The section below will be useful the day you want to calculate CO2e differently depending on the specification (particularly for petrol, diesel, hybrid cars, etc.).
+        It may be necessary to change the structure returned by distance_by_modes to take account of each specification.
+        if you change distance_by_modes, make sure you adapt each location where it was used.
+        """
+        #
+        # file = open(filename, 'r')
+        # try:
+        #     data = json.load(file)
+        # finally:
+        #     journey_data = data.get("journey", [])
+        #     file.close()
+
     except Exception as e:
         app.logger.error(f"Error during file analysis: {str(e)}")
         print(traceback.format_exc())
@@ -390,7 +403,7 @@ def analyse_journey_file():
         try:
             con = database.connect_to_db()
             cur = con.cursor()
-            cur.execute("UPDATE Records SET isValidated=?, isPending=? WHERE recordId=?", (False, False, record_id))
+            cur.execute("UPDATE Records SET isValidated=?, isPending=?, nbMethodUsed=?, kmTravelled=?  WHERE recordId=?", (False, False, len(distance_by_modes), sum(distance_by_modes.values())/1000, record_id))
             con.commit()
             con.close()
         except Exception as e:
@@ -403,13 +416,155 @@ def analyse_journey_file():
         #Sinon si il n'y a pas eu d'erreur on va update le record avec le résultat
         con = database.connect_to_db()
         cur = con.cursor()
-        cur.execute("UPDATE Records SET isValidated=?, isPending=? WHERE recordId=?", (result, False, record_id))
+        cur.execute("UPDATE Records SET isValidated=?, isPending=?, nbMethodUsed=?, kmTravelled=? WHERE recordId=?", (result, False,len(distance_by_modes), sum(distance_by_modes.values())/1000, record_id))
         con.commit()
         con.close()
+
+        if result == True:
+            """
+            This section allows you to retrieve a dictionary of CO2e emissions for each transport method and its specifications. It is structured as follows:
+                {
+                    ‘walk’: {‘default’: 0.231},
+                    ‘car‘: {’petrol": 0.634, “diesel”: 0.56, “Unknown”: 0.583},
+                    . . . etc
+                } 
+            """
+            con = database.connect_to_db()
+            cursor = con.cursor()
+            
+            # Step 1: Get all carbon emission factors with method names
+            cursor.execute('''
+                SELECT cef.carbonEmissionFactorId, cef.methodId, cef.co2eFactor, m.name AS methodName
+                FROM CarbonEmissionFactors cef
+                JOIN Methods m ON cef.methodId = m.methodId;
+            ''')
+            factors = cursor.fetchall()
+
+            # Step 2: Count the number of factors per method
+            cursor.execute('''
+                SELECT methodId, COUNT(*) AS count
+                FROM CarbonEmissionFactors
+                GROUP BY methodId;
+            ''')
+            counts = cursor.fetchall()
+            method_count = {methodId: count for methodId, count in counts}
+
+            # Step 3: Get specifications for methods with multiple factors
+            cursor.execute('''
+                SELECT cef.carbonEmissionFactorId, cef.methodId, cef.co2eFactor, ms.name AS specificationName
+                FROM CarbonEmissionFactors cef
+                JOIN CarbonEmissionFactorSpecifications ceff ON cef.carbonEmissionFactorId = ceff.carbonEmissionFactorId
+                JOIN MethodsSpecifications ms ON ceff.specificationId = ms.specificationId
+                WHERE ceff.methodId = cef.methodId;
+            ''')
+            specifications = cursor.fetchall()
+
+            con.close()
+
+            emission_dict = {}
+
+            # Process each factor
+            for factorId, methodId, co2eFactor, methodName in factors:
+                if method_count[methodId] == 1:
+                    emission_dict[methodName] = {"default": co2eFactor}
+                else:
+                    if methodName not in emission_dict:
+                        emission_dict[methodName] = {}
+            
+            # Add specifications to methods with multiple factors
+            for factorId, methodId, co2eFactor, specName in specifications:
+                method_name = next((name for fid, mid, cf, name in factors if fid == factorId), None)
+                if method_name:
+                    emission_dict[method_name][specName] = co2eFactor
+
+            app.logger.error('emission_dict')
+            app.logger.error(emission_dict)
+            app.logger.error('distance_by_modes')
+            app.logger.error(distance_by_modes)
+            c02eSaved = calculate_co2e_emission(distance_by_modes, emission_dict, record_id)
+            app.logger.error('c02eSaved')
+            app.logger.error(c02eSaved)
+
+            con = database.connect_to_db()
+            cur = con.cursor()
+            cur.execute("UPDATE Records SET co2Saved=? WHERE recordId=?", (c02eSaved, record_id))
+            con.commit()
+            con.close()
+                        
     except Exception as e:
         return f"Error updating record: {str(e)}", 500
 
     return "File successfully analyzed and record updated", 200
+
+
+def calculate_co2e_emission(distance_by_modes, emission_dict, recordId):
+    isWalkUsed = False
+    isDartUsed = False
+    isLuasUsed = False 
+    isBikeUsed = False 
+    isCarUsed = False 
+    isBusUsed = False 
+    kmWalk = 0 
+    kmDart = 0  
+    kmLuas = 0  
+    kmBike = 0 
+    kmCar = 0 
+    kmBus = 0 
+    co2eWalk = 0 
+    co2eDart = 0 
+    co2eLuas = 0 
+    co2eBike = 0 
+    co2eCar = 0 
+    co2eBus = 0 
+
+    for key in distance_by_modes:
+        if key == 'walk':
+            isWalkUsed = True
+            kmWalk += distance_by_modes[key]/1000
+            co2eWalk += distance_by_modes[key] * emission_dict[key]['default']
+        elif key == 'bus':
+            isBusUsed = True
+            kmBus += distance_by_modes[key]/1000
+            co2eBus += distance_by_modes[key] * emission_dict[key]['default']
+        elif key == 'luas':
+            isLuasUsed = True
+            kmLuas += distance_by_modes[key]/1000
+            co2eLuas += distance_by_modes[key] * emission_dict[key]['default']
+        elif key == 'dart':
+            isDartUsed = True
+            kmDart += distance_by_modes[key]/1000
+            co2eDart += distance_by_modes[key] * emission_dict[key]['default']
+        elif key == 'bike':
+            isBikeUsed = True
+            kmBike += distance_by_modes[key]/1000
+            co2eBike += distance_by_modes[key] * emission_dict[key]['default']
+        elif key == 'car':
+            isCarUsed = True
+            kmCar += distance_by_modes[key]/1000
+            co2eCar += distance_by_modes[key] * emission_dict[key]['Unknown']
+        
+        con = database.connect_to_db()
+        cur = con.cursor()
+        cur.execute('''
+        INSERT INTO CarbonEmissionStats (
+                    recordId, date, isWalkUsed, isDartUsed, isLuasUsed, isBikeUsed, isCarUsed, isBusUsed, kmWalk, kmDart,
+                    kmLuas, kmBike, kmCar, kmBus, co2eWalk, co2eDart, co2eLuas, co2eBike, co2eCar, co2eBus) VALUES
+                    (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ''',(recordId, datetime.datetime.now(), isWalkUsed, isDartUsed, isLuasUsed, isBikeUsed, isCarUsed, isBusUsed,
+             kmWalk, kmDart, kmLuas, kmBike, kmCar, kmBus, co2eWalk, co2eDart, co2eLuas, co2eBike, co2eCar, co2eBus))
+        con.commit()
+        con.close()
+
+        total_distance = sum(distance_by_modes.values())/1000
+        total_co2e = co2eWalk + co2eDart + co2eLuas + co2eBike + co2eCar + co2eBus
+        co2e_by_car = total_distance * emission_dict['car']['Unknown']
+        co2eSaved = co2e_by_car - total_co2e
+
+        app.logger.error('total_distance')
+        app.logger.error(total_distance)
+        app.logger.error('total_co2e')
+        app.logger.error(total_co2e)
+        return co2eSaved
 
 @app.route('/api/weekly-roundup', methods=['GET'])
 def get_weekly_roundup():
