@@ -431,7 +431,7 @@ def analyse_journey_file():
         """
         con = database.connect_to_db()
         cursor = con.cursor()
-        
+
         # Step 1: Get all carbon emission factors with method names
         cursor.execute('''
             SELECT cef.carbonEmissionFactorId, cef.methodId, cef.co2eFactor, m.name AS methodName
@@ -461,23 +461,30 @@ def analyse_journey_file():
 
         con.close()
 
+        app.logger.error('specifications')
+        app.logger.error(specifications)
+        app.logger.error('method_count')
+        app.logger.error(method_count)
+        app.logger.error('factors')
+        app.logger.error(factors)
+
         emission_dict = {}
 
         # Process each factor
         for factorId, methodId, co2eFactor, methodName in factors:
-            methodNameLower = str(methodName).lower()
+            methodNameLower = methodName.lower()
             if method_count[methodId] == 1:
                 emission_dict[methodNameLower] = {"default": co2eFactor}
             else:
-                if methodName not in emission_dict:
+                if methodNameLower not in emission_dict:
                     emission_dict[methodNameLower] = {}
-        
+
         # Add specifications to methods with multiple factors
         for factorId, methodId, co2eFactor, specName in specifications:
             method_name = next((name for fid, mid, cf, name in factors if fid == factorId), None)
             if method_name:
-                methodNameLower = str(methodName).lower()
-                emission_dict[methodNameLower][specName] = co2eFactor
+                methodNameLower = method_name.lower()
+                emission_dict[methodNameLower][specName.lower()] = co2eFactor
 
         app.logger.error('emission_dict')
         app.logger.error(emission_dict)
