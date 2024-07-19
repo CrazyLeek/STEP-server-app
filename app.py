@@ -566,7 +566,7 @@ def calculate_co2e_emission(distance_by_modes, emission_dict, recordId):
 
     total_distance = sum(distance_by_modes.values())/1000
     total_co2e = co2eWalk + co2eDart + co2eLuas + co2eBike + co2eCar + co2eBus
-    co2e_by_car = total_distance * emission_dict['car']['Unknown']
+    co2e_by_car = total_distance * emission_dict['car']['unknown']
     co2eSaved = co2e_by_car - total_co2e
 
     app.logger.error('total_distance')
