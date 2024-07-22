@@ -707,6 +707,54 @@ def get_kilometers_stats():
     except Exception as e:
         return str(e), 500
     
+@app.route('/api/usage_stats', methods=['GET'])
+def get_usage_stats():
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        cur.execute('''
+            SELECT 
+                strftime('%m', c.date) as month,
+                SUM(CASE WHEN c.isWalkUsed THEN 1 ELSE 0 END) as walkUsage,
+                SUM(CASE WHEN c.isDartUsed THEN 1 ELSE 0 END) as dartUsage,
+                SUM(CASE WHEN c.isLuasUsed THEN 1 ELSE 0 END) as luasUsage,
+                SUM(CASE WHEN c.isBikeUsed THEN 1 ELSE 0 END) as bikeUsage,
+                SUM(CASE WHEN c.isCarUsed THEN 1 ELSE 0 END) as carUsage,
+                SUM(CASE WHEN c.isBusUsed THEN 1 ELSE 0 END) as busUsage
+            FROM 
+                CarbonEmissionStats c
+            JOIN 
+                Records r ON c.recordId = r.recordId
+            WHERE 
+                r.isValidated = 1 AND r.isPending = 0
+            GROUP BY 
+                month
+        ''')
+        rows = cur.fetchall()
+        con.close()
+
+        stats = {
+            "Walk": [0]*12,
+            "Dart": [0]*12,
+            "Luas": [0]*12,
+            "Bike": [0]*12,
+            "Car": [0]*12,
+            "Bus": [0]*12,
+        }
+
+        for row in rows:
+            month_index = int(row[0]) - 1
+            stats["Walk"][month_index] = row[1]
+            stats["Dart"][month_index] = row[2]
+            stats["Luas"][month_index] = row[3]
+            stats["Bike"][month_index] = row[4]
+            stats["Car"][month_index] = row[5]
+            stats["Bus"][month_index] = row[6]
+
+        return jsonify(stats), 200
+    except Exception as e:
+        return str(e), 500
+    
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
     return render_template("gps_record_app.html")
