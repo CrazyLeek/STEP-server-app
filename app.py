@@ -536,7 +536,7 @@ def calculate_co2e_emission(distance_by_modes, emission_dict, recordId):
         elif key == 'car':
             isCarUsed = True
             kmCar += distance_by_modes[key]/1000
-            co2eCar += distance_by_modes[key] * emission_dict[key]['Unknown']
+            co2eCar += distance_by_modes[key] * emission_dict[key]['unknown']
         
     con = database.connect_to_db()
     cur = con.cursor()
@@ -551,9 +551,17 @@ def calculate_co2e_emission(distance_by_modes, emission_dict, recordId):
     con.close()
 
     total_distance = sum(distance_by_modes.values())/1000
+    app.logger.error("total_distance")
+    app.logger.error(total_distance)
     total_co2e = co2eWalk + co2eDart + co2eLuas + co2eBike + co2eCar + co2eBus
+    app.logger.error("total_co2e")
+    app.logger.error(total_co2e)
     co2e_by_car = total_distance * emission_dict['car']['unknown']
+    app.logger.error("co2e_by_car")
+    app.logger.error(co2e_by_car)
     co2eSaved = co2e_by_car - total_co2e
+    app.logger.error("co2eSaved")
+    app.logger.error(co2eSaved)
 
     return co2eSaved
 
