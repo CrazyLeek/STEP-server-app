@@ -661,41 +661,42 @@ def get_kilometers_stats():
         cur = con.cursor()
         cur.execute('''
             SELECT 
-                date,
-                kmWalk,
-                kmDart,
-                kmLuas,
-                kmBike,
-                kmCar,
-                kmBus
+                strftime('%m', date) as month,
+                SUM(kmWalk) as kmWalk,
+                SUM(kmDart) as kmDart,
+                SUM(kmLuas) as kmLuas,
+                SUM(kmBike) as kmBike,
+                SUM(kmCar) as kmCar,
+                SUM(kmBus) as kmBus
             FROM CarbonEmissionStats
+            GROUP BY month
         ''')
         rows = cur.fetchall()
         con.close()
 
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         stats = {
-            "Walk": [0] * 12,
-            "Dart": [0] * 12,
-            "Luas": [0] * 12,
-            "Bike": [0] * 12,
-            "Car": [0] * 12,
-            "Bus": [0] * 12,
+            "Walk": [0]*12,
+            "Dart": [0]*12,
+            "Luas": [0]*12,
+            "Bike": [0]*12,
+            "Car": [0]*12,
+            "Bus": [0]*12,
         }
 
         for row in rows:
-            date = datetime.datetime.strptime(row[0], '%Y-%m-%d')
-            month = date.month - 1
-            stats["Walk"][month] += row[1]
-            stats["Dart"][month] += row[2]
-            stats["Luas"][month] += row[3]
-            stats["Bike"][month] += row[4]
-            stats["Car"][month] += row[5]
-            stats["Bus"][month] += row[6]
+            month_index = int(row[0]) - 1
+            stats["Walk"][month_index] = row[1]
+            stats["Dart"][month_index] = row[2]
+            stats["Luas"][month_index] = row[3]
+            stats["Bike"][month_index] = row[4]
+            stats["Car"][month_index] = row[5]
+            stats["Bus"][month_index] = row[6]
 
         return jsonify(stats), 200
     except Exception as e:
         return str(e), 500
-
+    
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
     return render_template("gps_record_app.html")
