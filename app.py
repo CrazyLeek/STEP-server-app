@@ -618,30 +618,37 @@ def get_carbon_emission_stats():
         cur = con.cursor()
         cur.execute('''
             SELECT 
-                date,
-                co2eWalk,
-                co2eDart,
-                co2eLuas,
-                co2eBike,
-                co2eCar,
-                co2eBus
+                strftime('%m', date) as month,
+                SUM(co2eWalk) as co2eWalk,
+                SUM(co2eDart) as co2eDart,
+                SUM(co2eLuas) as co2eLuas,
+                SUM(co2eBike) as co2eBike,
+                SUM(co2eCar) as co2eCar,
+                SUM(co2eBus) as co2eBus
             FROM CarbonEmissionStats
+            GROUP BY month
         ''')
         rows = cur.fetchall()
         con.close()
 
-        stats = [
-            {
-                "date": row[0],
-                "co2eWalk": row[1],
-                "co2eDart": row[2],
-                "co2eLuas": row[3],
-                "co2eBike": row[4],
-                "co2eCar": row[5],
-                "co2eBus": row[6],
-            }
-            for row in rows
-        ]
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        stats = {
+            "Walk": [0]*12,
+            "Dart": [0]*12,
+            "Luas": [0]*12,
+            "Bike": [0]*12,
+            "Car": [0]*12,
+            "Bus": [0]*12,
+        }
+
+        for row in rows:
+            month_index = int(row[0]) - 1
+            stats["Walk"][month_index] = row[1]
+            stats["Dart"][month_index] = row[2]
+            stats["Luas"][month_index] = row[3]
+            stats["Bike"][month_index] = row[4]
+            stats["Car"][month_index] = row[5]
+            stats["Bus"][month_index] = row[6]
 
         return jsonify(stats), 200
     except Exception as e:
