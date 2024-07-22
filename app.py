@@ -618,20 +618,25 @@ def get_carbon_emission_stats():
         cur = con.cursor()
         cur.execute('''
             SELECT 
-                strftime('%m', date) as month,
-                SUM(co2eWalk) as co2eWalk,
-                SUM(co2eDart) as co2eDart,
-                SUM(co2eLuas) as co2eLuas,
-                SUM(co2eBike) as co2eBike,
-                SUM(co2eCar) as co2eCar,
-                SUM(co2eBus) as co2eBus
-            FROM CarbonEmissionStats
-            GROUP BY month
+                strftime('%m', c.date) as month,
+                SUM(c.co2eWalk) as co2eWalk,
+                SUM(c.co2eDart) as co2eDart,
+                SUM(c.co2eLuas) as co2eLuas,
+                SUM(c.co2eBike) as co2eBike,
+                SUM(c.co2eCar) as co2eCar,
+                SUM(c.co2eBus) as co2eBus
+            FROM 
+                CarbonEmissionStats c
+            JOIN 
+                Records r ON c.recordId = r.recordId
+            WHERE 
+                r.isValidated = 1 AND r.isPending = 0
+            GROUP BY 
+                month
         ''')
         rows = cur.fetchall()
         con.close()
 
-        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         stats = {
             "Walk": [0]*12,
             "Dart": [0]*12,
@@ -661,20 +666,25 @@ def get_kilometers_stats():
         cur = con.cursor()
         cur.execute('''
             SELECT 
-                strftime('%m', date) as month,
-                SUM(kmWalk) as kmWalk,
-                SUM(kmDart) as kmDart,
-                SUM(kmLuas) as kmLuas,
-                SUM(kmBike) as kmBike,
-                SUM(kmCar) as kmCar,
-                SUM(kmBus) as kmBus
-            FROM CarbonEmissionStats
-            GROUP BY month
+                strftime('%m', c.date) as month,
+                SUM(c.kmWalk) as kmWalk,
+                SUM(c.kmDart) as kmDart,
+                SUM(c.kmLuas) as kmLuas,
+                SUM(c.kmBike) as kmBike,
+                SUM(c.kmCar) as kmCar,
+                SUM(c.kmBus) as kmBus
+            FROM 
+                CarbonEmissionStats c
+            JOIN 
+                Records r ON c.recordId = r.recordId
+            WHERE 
+                r.isValidated = 1 AND r.isPending = 0
+            GROUP BY 
+                month
         ''')
         rows = cur.fetchall()
         con.close()
 
-        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         stats = {
             "Walk": [0]*12,
             "Dart": [0]*12,
