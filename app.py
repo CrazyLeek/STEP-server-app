@@ -516,27 +516,27 @@ def calculate_co2e_emission(distance_by_modes, emission_dict, recordId):
         if key == 'walk':
             isWalkUsed = True
             kmWalk += distance_by_modes[key]/1000
-            co2eWalk += distance_by_modes[key] * emission_dict[key]['default']
+            co2eWalk += distance_by_modes[key]/1000 * emission_dict[key]['default']
         elif key == 'bus':
             isBusUsed = True
             kmBus += distance_by_modes[key]/1000
-            co2eBus += distance_by_modes[key] * emission_dict[key]['default']
+            co2eBus += distance_by_modes[key]/1000 * emission_dict[key]['default']
         elif key == 'luas':
             isLuasUsed = True
             kmLuas += distance_by_modes[key]/1000
-            co2eLuas += distance_by_modes[key] * emission_dict[key]['default']
+            co2eLuas += distance_by_modes[key]/1000 * emission_dict[key]['default']
         elif key == 'dart':
             isDartUsed = True
             kmDart += distance_by_modes[key]/1000
-            co2eDart += distance_by_modes[key] * emission_dict[key]['default']
+            co2eDart += distance_by_modes[key]/1000 * emission_dict[key]['default']
         elif key == 'bike':
             isBikeUsed = True
             kmBike += distance_by_modes[key]/1000
-            co2eBike += distance_by_modes[key] * emission_dict[key]['default']
+            co2eBike += distance_by_modes[key]/1000 * emission_dict[key]['default']
         elif key == 'car':
             isCarUsed = True
             kmCar += distance_by_modes[key]/1000
-            co2eCar += distance_by_modes[key] * emission_dict[key]['unknown']
+            co2eCar += distance_by_modes[key]/1000 * emission_dict[key]['unknown']
         
     con = database.connect_to_db()
     cur = con.cursor()
