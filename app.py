@@ -653,6 +653,48 @@ def get_carbon_emission_stats():
         return jsonify(stats), 200
     except Exception as e:
         return str(e), 500
+    
+@app.route('/api/kilometers_stats', methods=['GET'])
+def get_kilometers_stats():
+    try:
+        con = database.connect_to_db()
+        cur = con.cursor()
+        cur.execute('''
+            SELECT 
+                date,
+                kmWalk,
+                kmDart,
+                kmLuas,
+                kmBike,
+                kmCar,
+                kmBus
+            FROM CarbonEmissionStats
+        ''')
+        rows = cur.fetchall()
+        con.close()
+
+        stats = {
+            "Walk": [0] * 12,
+            "Dart": [0] * 12,
+            "Luas": [0] * 12,
+            "Bike": [0] * 12,
+            "Car": [0] * 12,
+            "Bus": [0] * 12,
+        }
+
+        for row in rows:
+            date = datetime.datetime.strptime(row[0], '%Y-%m-%d')
+            month = date.month - 1
+            stats["Walk"][month] += row[1]
+            stats["Dart"][month] += row[2]
+            stats["Luas"][month] += row[3]
+            stats["Bike"][month] += row[4]
+            stats["Car"][month] += row[5]
+            stats["Bus"][month] += row[6]
+
+        return jsonify(stats), 200
+    except Exception as e:
+        return str(e), 500
 
 @app.route("/apps/gps_recorder")
 def gps_recorder_page():
