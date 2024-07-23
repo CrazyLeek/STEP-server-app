@@ -624,7 +624,8 @@ def get_carbon_emission_stats():
                 SUM(c.co2eLuas) as co2eLuas,
                 SUM(c.co2eBike) as co2eBike,
                 SUM(c.co2eCar) as co2eCar,
-                SUM(c.co2eBus) as co2eBus
+                SUM(c.co2eBus) as co2eBus,
+                COUNT(DISTINCT c.recordId) as recordCount
             FROM 
                 CarbonEmissionStats c
             JOIN 
@@ -644,8 +645,10 @@ def get_carbon_emission_stats():
             "Bike": [0]*12,
             "Car": [0]*12,
             "Bus": [0]*12,
+            "TotalRecords": 0,
         }
 
+        total_records = 0
         for row in rows:
             month_index = int(row[0]) - 1
             stats["Walk"][month_index] = row[1]
@@ -654,6 +657,9 @@ def get_carbon_emission_stats():
             stats["Bike"][month_index] = row[4]
             stats["Car"][month_index] = row[5]
             stats["Bus"][month_index] = row[6]
+            total_records += row[7]
+
+        stats["TotalRecords"] = total_records
 
         return jsonify(stats), 200
     except Exception as e:
@@ -672,7 +678,8 @@ def get_kilometers_stats():
                 SUM(c.kmLuas) as kmLuas,
                 SUM(c.kmBike) as kmBike,
                 SUM(c.kmCar) as kmCar,
-                SUM(c.kmBus) as kmBus
+                SUM(c.kmBus) as kmBus,
+                COUNT(DISTINCT c.recordId) as recordCount
             FROM 
                 CarbonEmissionStats c
             JOIN 
@@ -692,8 +699,10 @@ def get_kilometers_stats():
             "Bike": [0]*12,
             "Car": [0]*12,
             "Bus": [0]*12,
+            "TotalRecords": 0,
         }
 
+        total_records = 0
         for row in rows:
             month_index = int(row[0]) - 1
             stats["Walk"][month_index] = row[1]
@@ -702,6 +711,9 @@ def get_kilometers_stats():
             stats["Bike"][month_index] = row[4]
             stats["Car"][month_index] = row[5]
             stats["Bus"][month_index] = row[6]
+            total_records += row[7]
+
+        stats["TotalRecords"] = total_records
 
         return jsonify(stats), 200
     except Exception as e:
@@ -720,7 +732,8 @@ def get_usage_stats():
                 SUM(CASE WHEN c.isLuasUsed THEN 1 ELSE 0 END) as luasUsage,
                 SUM(CASE WHEN c.isBikeUsed THEN 1 ELSE 0 END) as bikeUsage,
                 SUM(CASE WHEN c.isCarUsed THEN 1 ELSE 0 END) as carUsage,
-                SUM(CASE WHEN c.isBusUsed THEN 1 ELSE 0 END) as busUsage
+                SUM(CASE WHEN c.isBusUsed THEN 1 ELSE 0 END) as busUsage,
+                COUNT(DISTINCT c.recordId) as recordCount
             FROM 
                 CarbonEmissionStats c
             JOIN 
@@ -740,8 +753,10 @@ def get_usage_stats():
             "Bike": [0]*12,
             "Car": [0]*12,
             "Bus": [0]*12,
+            "TotalRecords": 0,
         }
 
+        total_records = 0
         for row in rows:
             month_index = int(row[0]) - 1
             stats["Walk"][month_index] = row[1]
@@ -750,6 +765,9 @@ def get_usage_stats():
             stats["Bike"][month_index] = row[4]
             stats["Car"][month_index] = row[5]
             stats["Bus"][month_index] = row[6]
+            total_records += row[7]
+
+        stats["TotalRecords"] = total_records
 
         return jsonify(stats), 200
     except Exception as e:
