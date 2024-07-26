@@ -36,17 +36,66 @@ def get_user(user_id):
         user_id (int): Identifier of the user to fetch.
 
     Returns:
-        user: The fetched user.
+        dict: The fetched user details.
     """
-    userDic = {}
     con = database.connect_to_db()
     cur = con.cursor()
-    user = cur.execute("SELECT * FROM Users WHERE userId=?", (user_id,)).fetchall()
+    
+    user_query = """
+    SELECT u.userId, u.username, u.firstName, u.lastName, u.password, 
+           u.companyId, c.name as companyName, 
+           u.companyPositionId, cp.name as companyPositionName,
+           u.points, u.score, u.lastMonthScore, u.lastMonthScoreDate,
+           u.lastWeekPosition, u.lastWeekPositionDate, u.rewardGoalId,
+           r.name as rewardName, r.cost, r.companyId as rewardCompanyId, rc.name as rewardCompanyName
+    FROM Users u
+    LEFT JOIN Companies c ON u.companyId = c.companyId
+    LEFT JOIN CompanyPositions cp ON u.companyPositionId = cp.companyPositionId
+    LEFT JOIN Rewards r ON u.rewardGoalId = r.rewardId
+    LEFT JOIN Companies rc ON r.companyId = rc.companyId
+    WHERE u.userId = ?
+    """
+    
+    user = cur.execute(user_query, (user_id,)).fetchone()
     con.close()
+    
     if user:
-        userDic['userId'] = user[0][0]
-        userDic['username'] = user[0][1]
-    return user
+        userDic = {
+            "userId": user[0],
+            "username": user[1],
+            "firstName": user[2],
+            "lastName": user[3],
+            "password": user[4],
+            "company": {
+                "companyId": user[5],
+                "name": user[6]
+            },
+            "companyPosition": {
+                "companyPositionId": user[7],
+                "company": {
+                    "companyId": user[5],
+                    "name": user[6]
+                },
+                "name": user[8]
+            },
+            "points": user[9],
+            "score": user[10],
+            "lastMonthScore": user[11],
+            "lastMonthScoreDate": user[12],
+            "lastWeekPosition": user[13],
+            "lastWeekPositionDate": user[14],
+            "rewardGoal": {
+                "rewardId": user[15],
+                "cost": user[16],
+                "company": {
+                    "companyId": user[17],
+                    "name": user[18]
+                },
+                "name": user[19]
+            }
+        }
+        return userDic
+    return None
 
 def get_user_by_username(username):
     """

@@ -124,7 +124,7 @@ def receive_login():
     """
     return login_user(request.json)
 
-@app.get('/api/user/<user_id>')
+@app.route('/api/user/<int:user_id>', methods=['GET'])
 def send_user(user_id):
     """
     API route used to get a user.
@@ -135,7 +135,10 @@ def send_user(user_id):
         - 404 (Not Found): User not found.
         - 500 (Internal Server Error): Error fetching user for unknown reason.
     """
-    return get_user_details(user_id)
+    try:
+        return get_user_details(user_id)
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 @app.post("/api/user")
 def receive_user():
