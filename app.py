@@ -573,6 +573,7 @@ def get_start_end_of_week(date):
 @app.route('/api/weekly-roundup/<int:user_id>', methods=['GET'])
 def get_weekly_roundup(user_id):
     con = database.connect_to_db()
+    con.row_factory = sqlite3.Row
     cur = con.cursor()
     
     today = datetime.today()
