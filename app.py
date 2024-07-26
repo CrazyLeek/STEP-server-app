@@ -6,7 +6,7 @@ from users import *
 from journeys import *
 from auth import *
 import sqlite3
-import datetime
+from datetime import datetime, timedelta
 import traceback
 
 import sys
@@ -565,16 +565,53 @@ def calculate_co2e_emission(distance_by_modes, emission_dict, recordId):
 
     return co2eSaved
 
-@app.route('/api/weekly-roundup', methods=['GET'])
-def get_weekly_roundup():
+# Fonction pour obtenir la date de début et de fin de la semaine en cours
+def get_start_end_of_week(date):
+    start = date - timedelta(days=date.weekday())
+    end = start + timedelta(days=6)
+    return start, end
+
+@app.route('/api/weekly-roundup/<int:user_id>', methods=['GET'])
+def get_weekly_roundup(user_id):
+    con = sqlite3.connect('your_database.db')
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+    
+    # Calcul des dates de début et de fin de la semaine en cours
+    today = datetime.today()
+    start_of_week, end_of_week = get_start_end_of_week(today)
+    start_of_week_str = start_of_week.strftime('%Y-%m-%d')
+    end_of_week_str = end_of_week.strftime('%Y-%m-%d')
+    
+    # Requête pour obtenir les records de la semaine en cours pour l'utilisateur
+    query = '''
+        SELECT r.*
+        FROM Records r
+        LEFT JOIN Journeys j ON r.journeyId = j.journeyId
+        WHERE j.userId = ?
+          AND r.startDate BETWEEN ? AND ?
+    '''
+    
+    records = cur.execute(query, (user_id, start_of_week_str, end_of_week_str)).fetchall()
+    
+    # Calcul des valeurs de routesCompleted et co2Reduced
+    routes_completed = len(records)
+    co2_reduced = sum(record['co2Saved'] for record in records)
+    
+    # Fermeture de la connexion à la base de données
+    cur.close()
+    con.close()
+    
+    # Construction de la réponse JSON
     data = {
-        'routesCompleted': 0,
-        'co2Reduced': 0,
-        'pointsEarned': 0,
-        'moneySaved': 0,
-        'leaderboardPosition': 0,
-        'placesGained': 0,
+        'routesCompleted': routes_completed,
+        'co2Reduced': co2_reduced,
+        'pointsEarned': 0,  # À compléter si nécessaire
+        'moneySaved': 0,    # À compléter si nécessaire
+        'leaderboardPosition': 0,  # À compléter si nécessaire
+        'placesGained': 0,   # À compléter si nécessaire
     }
+    
     return jsonify(data)
 
 @app.route('/api/user-records/<int:user_id>', methods=['GET'])
