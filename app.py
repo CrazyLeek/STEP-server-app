@@ -399,6 +399,7 @@ def analyse_journey_file():
         #     file.close()
 
     except Exception as e:
+        app.logger(traceback.extract_stack())
         app.logger.error(f"Error during file analysis: {str(e)}")
         print(traceback.format_exc())
         #Si ça échoue en cours de route on set le record associé à refusé
