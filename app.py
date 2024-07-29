@@ -596,7 +596,13 @@ def get_weekly_roundup(user_id):
     records = cur.execute(query, (user_id, start_of_week_str, end_of_week_str)).fetchall()
     
     routes_completed = len(records)
+    app.logger.error('routes_completed')
+    app.logger.error(routes_completed)
+    app.logger.error('records')
+    app.logger.error(records)
     co2_reduced = sum(record['co2Saved'] for record in records)
+    app.logger.error('co2_reduced')
+    app.logger.error(co2_reduced)
     
     cur.close()
     con.close()
