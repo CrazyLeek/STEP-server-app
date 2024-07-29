@@ -549,7 +549,7 @@ def calculate_co2e_emission(distance_by_modes, emission_dict, recordId):
                 recordId, date, isWalkUsed, isDartUsed, isLuasUsed, isBikeUsed, isCarUsed, isBusUsed, kmWalk, kmDart,
                 kmLuas, kmBike, kmCar, kmBus, co2eWalk, co2eDart, co2eLuas, co2eBike, co2eCar, co2eBus) VALUES
                 (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    ''',(recordId, datetime.datetime.now(), isWalkUsed, isDartUsed, isLuasUsed, isBikeUsed, isCarUsed, isBusUsed,
+    ''',(recordId, datetime.now(), isWalkUsed, isDartUsed, isLuasUsed, isBikeUsed, isCarUsed, isBusUsed,
         kmWalk, kmDart, kmLuas, kmBike, kmCar, kmBus, co2eWalk, co2eDart, co2eLuas, co2eBike, co2eCar, co2eBus))
     con.commit()
     con.close()
