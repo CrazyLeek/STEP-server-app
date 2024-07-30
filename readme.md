@@ -42,42 +42,13 @@ sudo fuser -k 8003/tcp
 
 ### API Endpoints
 
-#### Journey Data
+#### User
 
-- **POST** `/api/journey_data`
-    - Stores a new journey data.
-    - Example request body:
-      ```json
-      {
-          "journey": [
-              ["walk", null],
-              ["bus", "83"],
-              ["luas", "Red"]
-          ],
-          "gps": [[-6.2522889, 53.3424784, "2024-06-28T12:21:14.912Z"]],
-          "realtime": []
-      }
-      ```
+- **GET** `/api/user/<user_id>`
+    - Fetches details of a specific user.
 
-- **GET** `/api/journey_data`
-    - Fetches all stored journey data.
-    - Requires admin password in request body:
-      ```json
-      {
-          "password": "Zélie est une vilaine fille"
-      }
-      ```
-
-- **DELETE** `/api/journey_data`
-    - Deletes all stored journey data.
-    - Requires admin password in request body:
-      ```json
-      {
-          "password": "Zélie est une vilaine fille"
-      }
-      ```
-
-#### User Management
+- **GET** `/api/user_profile_image/<user_id>`
+    - Fetches the profile image of a specific user.
 
 - **POST** `/api/user`
     - Registers a new user.
@@ -101,16 +72,55 @@ sudo fuser -k 8003/tcp
       }
       ```
 
-- **GET** `/api/user/<user_id>`
-    - Fetches details of a specific user.
-
 - **DELETE** `/api/user/<user_id>`
     - Deletes a specific user and their associated data.
 
-#### Journey Management
+#### Journey
+
+- **GET** `/api/journey_data`
+    - Fetches all stored journey data.
+    - Requires admin password in request body:
+      ```json
+      {
+          "password": "Zélie est une vilaine fille"
+      }
+      ```
 
 - **GET** `/api/journey/user/<user_id>`
     - Fetches all journeys for a specific user.
+
+- **GET** `/api/journey/<journey_id>`
+    - Fetches details of a specific journey.
+
+- **POST** `/api/journey_data/new`
+    - Stores new journey data.
+    - Example request body:
+      ```json
+      {
+          "journey": [
+              ["walk", null],
+              ["bus", "83"],
+              ["luas", "Red"]
+          ],
+          "gps": [[-6.2522889, 53.3424784, "2024-06-28T12:21:14.912Z"]],
+          "realtime": []
+      }
+      ```
+
+- **POST** `/api/journey_data`
+    - Stores journey data.
+    - Example request body:
+      ```json
+      {
+          "journey": [
+              ["walk", null],
+              ["bus", "83"],
+              ["luas", "Red"]
+          ],
+          "gps": [[-6.2522889, 53.3424784, "2024-06-28T12:21:14.912Z"]],
+          "realtime": []
+      }
+      ```
 
 - **POST** `/api/journey`
     - Stores a new journey.
@@ -123,13 +133,28 @@ sudo fuser -k 8003/tcp
       }
       ```
 
-- **GET** `/api/journey/<journey_id>`
-    - Fetches details of a specific journey.
+- **POST** `/api/upload_journey_file`
+    - Uploads a journey file.
+    - Example request body (multipart form-data):
+      - file: The JSON file containing journey data.
+    - Responses:
+      - 201 (Created): File successfully uploaded and stored.
+      - 400 (Bad Request): No file part or no selected file.
+      - 507 (Insufficient Storage): Too many files on the server.
 
 - **DELETE** `/api/journey/<journey_id>`
     - Deletes a specific journey.
 
-#### Method Specifications
+- **DELETE** `/api/journey_data`
+    - Deletes all stored journey data.
+    - Requires admin password in request body:
+      ```json
+      {
+          "password": "Zélie est une vilaine fille"
+      }
+      ```    
+
+#### Methods & Specifications
 
 - **GET** `/api/specification/method/<method_id>`
     - Fetches specifications for a specific method.
@@ -142,6 +167,20 @@ sudo fuser -k 8003/tcp
 
 #### Records
 
+- **GET** `/api/user-records/<int:user_id>`
+    - Fetches all records for a specific user.
+
+- **POST** `/api/analyse_journey_file`
+    - Analyzes a journey file.
+    - Example request body (multipart form-data):
+      - file: The JSON file containing journey data.
+      - recordId: The ID of the journey record.
+      - username: The username of the user.
+    - Responses:
+      - 200 (OK): File successfully analyzed.
+      - 400 (Bad Request): No file part or recordId or username.
+      - 500 (Internal Server Error): Error during file analysis.
+
 - **POST** `/api/record`
     - Stores a new journey record.
     - Example request body:
@@ -149,6 +188,41 @@ sudo fuser -k 8003/tcp
       {
           "journeyId": 1,
           "isValidated": false,
-          "isPending": true
+          "isPending": true,
+          "jsonFileName": "example.json",
+          "points": 0,
+          "co2Saved": 0,
+          "startDate": "2024-07-04T12:00:00Z",
+          "endDate": "2024-07-04T13:00:00Z"
       }
       ```
+      
+#### Statistics
+
+- **GET** `/api/carbon_emission_stats`
+    - Fetches carbon emission statistics.
+
+- **GET** `/api/kilometers_stats`
+    - Fetches kilometers statistics.
+
+- **GET** `/api/usage_stats`
+    - Fetches usage statistics.
+
+#### Weekly Roundup
+
+- **GET** `/api/weekly-roundup/<int:user_id>`
+    - Fetches the weekly roundup for a specific user.
+
+### App Pages
+
+- **GPS Recorder Page**
+  ```
+  GET /apps/gps_recorder
+  ```
+  - Renders the GPS recorder app page.
+
+- **STEP App Page**
+  ```
+  GET /apps/step
+  ```
+  - Renders the STEP app page.
