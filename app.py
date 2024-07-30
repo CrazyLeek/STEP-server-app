@@ -5,6 +5,8 @@ from werkzeug.utils import secure_filename
 from users import *
 from journeys import *
 from auth import *
+from records import *
+from methods import *
 import sqlite3
 from datetime import datetime, timedelta
 
@@ -363,31 +365,7 @@ def get_user_records(user_id):
         - 404 (Not Found): No records found for the given user ID.
         - 500 (Internal Server Error): Error retrieving records.
     """
-    con = database.connect_to_db()
-    con.row_factory = sqlite3.Row
-    cur = con.cursor()
-    
-    query = '''
-        SELECT r.*, j.name as journey_name
-        FROM Records r
-        LEFT JOIN Journeys j ON r.journeyId = j.journeyId
-        WHERE j.userId = ?
-        ORDER BY r.startDate DESC
-    '''
-    
-    records = cur.execute(query, (user_id,)).fetchall()
-    records_list = []
-    
-    for record in records:
-        record_dict = dict(record)
-        record_dict['journey'] = {'name': record_dict['journey_name']} if record_dict.get('journey_name') else None
-        del record_dict['journey_name']
-        records_list.append(record_dict)
-    
-    cur.close()
-    con.close()
-
-    return jsonify(records_list)
+    return jsonify(get_all_user_records(user_id))
 
 @app.post("/api/analyse_journey_file")
 def analyse_journey_file():
